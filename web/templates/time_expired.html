@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-lg-8 mx-auto">
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Time Limit Exceeded!</h4>
+            <p>Your 30-minute exam time has expired. You can no longer submit answers.</p>
+            <hr>
+            <p class="mb-0">If you have already submitted your answers, you can view your results. Otherwise, please contact your instructor.</p>
+        </div>
+        
+        <div class="text-center">
+            <a class="btn btn-outline-primary" href="/">Back to Home</a>
+            <a class="btn btn-outline-secondary" href="/logout">Logout</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

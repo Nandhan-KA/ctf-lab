@@ -69,14 +69,18 @@ chown -R "$TELNET_USER:$TELNET_USER" "/home/$TELNET_USER"
 chown -R "$SMB_USER:$SMB_USER" "/srv/smb"
 chmod -R 755 "/home/$FTP_USER" "/home/$TELNET_USER" "/srv/smb"
 
-# Configure vsftpd
+# Configure vsftpd for anonymous access
 if [[ -f /etc/vsftpd.conf ]]; then
   cp /etc/vsftpd.conf /etc/vsftpd.conf.bak_$(date +%s) || true
 fi
 cat > /etc/vsftpd.conf <<'VSFTPD'
 listen=YES
 listen_ipv6=NO
-anonymous_enable=NO
+anonymous_enable=YES
+anon_root=/home/ftpuser
+anon_upload_enable=NO
+anon_mkdir_write_enable=NO
+anon_other_write_enable=NO
 local_enable=YES
 write_enable=NO
 local_umask=022
@@ -94,6 +98,7 @@ userlist_enable=YES
 userlist_deny=NO
 userlist_file=/etc/vsftpd.userlist
 ftpd_banner=Welcome to the CTF Lab FTP server.
+anon_password=12345678
 VSFTPD
 
 echo "$FTP_USER" > /etc/vsftpd.userlist
@@ -128,7 +133,7 @@ else
   echo "[!] Telnet daemon not found; please install xinetd or openbsd-inetd + telnetd manually." >&2
 fi
 
-# Configure Samba
+# Configure Samba with credentials workspace
 if [[ -f /etc/samba/smb.conf ]]; then
   cp /etc/samba/smb.conf /etc/samba/smb.conf.bak_$(date +%s) || true
 fi
@@ -142,23 +147,45 @@ cat > /etc/samba/smb.conf <<'SMB'
    pam password change = yes
    security = user
 
-[ctfshare]
+[credentials]
    path = /srv/smb
    browseable = yes
    read only = yes
    guest ok = no
    valid users = smbuser
+   comment = CTF Lab Credentials Share
+
+[admin]
+   path = /srv/smb
+   browseable = yes
+   read only = yes
+   guest ok = no
+   valid users = smbuser
+   comment = CTF Lab Admin Share
+
+[IC]
+   path = /srv/smb
+   browseable = yes
+   read only = yes
+   guest ok = no
+   valid users = smbuser
+   comment = CTF Lab IC Share
 SMB
 
 echo -e "$SMB_PASS\n$SMB_PASS" | smbpasswd -a -s "$SMB_USER" || true
 systemctl enable smbd || true
 systemctl restart smbd || true
 
+# Create SMB workspace structure
+mkdir -p /srv/smb/idk /srv/smb/thisisit /srv/smb/thisisnot
+chown -R "$SMB_USER:$SMB_USER" /srv/smb
+
 # Python environment and web app deps
 mkdir -p "$WEB_DIR"
 python3 -m venv "$WEB_DIR/venv"
 "$WEB_DIR/venv/bin/pip" install --upgrade pip
 "$WEB_DIR/venv/bin/pip" install -r "$WEB_DIR/requirements.txt"
+"$WEB_DIR/venv/bin/pip" install werkzeug
 
 # Ensure students file exists
 if [[ ! -f "$STUDENTS_FILE" ]]; then
@@ -172,6 +199,7 @@ fi
 # Generate flags, populate DB, and write flag files
 /usr/bin/env python3 - <<PY
 import csv, os, sqlite3, secrets, time
+from werkzeug.security import generate_password_hash
 DB_PATH = os.environ.get('DB_PATH', r"$DB_PATH")
 STUDENTS_FILE = os.environ.get('STUDENTS_FILE', r"$STUDENTS_FILE")
 FTP_FLAGS_DIR = os.environ.get('FTP_FLAGS_DIR', r"$FTP_FLAGS_DIR")
@@ -181,19 +209,44 @@ SMB_FLAGS_DIR = os.environ.get('SMB_FLAGS_DIR', r"$SMB_FLAGS_DIR")
 os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 conn = sqlite3.connect(DB_PATH)
 c = conn.cursor()
+
+# Create the correct schema that matches the Flask app
 c.execute(
     """
     CREATE TABLE IF NOT EXISTS students (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
+        register_number TEXT UNIQUE NOT NULL,
+        year_dept TEXT NOT NULL,
+        phone_number TEXT NOT NULL,
+        password TEXT NOT NULL,
         flag TEXT NOT NULL,
-        submitted_flag TEXT,
-        score INTEGER DEFAULT 0,
-        timestamp TEXT
+        registered INTEGER DEFAULT 0,
+        login_time TIMESTAMP,
+        time_limit TIMESTAMP
     )
     """
 )
+
+c.execute(
+    """
+    CREATE TABLE IF NOT EXISTS submissions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id INTEGER,
+        question_1 TEXT,
+        question_2 TEXT,
+        question_3 TEXT,
+        question_4 TEXT,
+        question_5 TEXT,
+        question_6 TEXT,
+        score INTEGER DEFAULT 0,
+        submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (student_id) REFERENCES students (id)
+    )
+    """
+)
+
 conn.commit()
 
 created = 0
@@ -204,27 +257,30 @@ with open(STUDENTS_FILE, newline='') as f:
         if not line or line.startswith('#'):
             continue
         parts = [p.strip() for p in line.split(',')]
-        if len(parts) < 2:
+        if len(parts) < 5:
             continue
-        name, email = parts[0], parts[1].lower()
+        name, email, register_number, year_dept, phone_number = parts[0], parts[1].lower(), parts[2], parts[3], parts[4]
         flag = f"FLAG{{{name.replace(' ', '')}_{secrets.token_hex(8)}}}"
-        ts = time.strftime('%Y-%m-%d %H:%M:%S')
-
+        
+        # Generate a default password for pre-registered students
+        default_password = generate_password_hash(f"student{secrets.token_hex(4)}")
+        
         # Upsert logic
-        cur = conn.execute("SELECT id FROM students WHERE email = ?", (email,))
+        cur = conn.execute("SELECT id FROM students WHERE email = ? OR register_number = ?", (email, register_number))
         row = cur.fetchone()
         if row is None:
             conn.execute(
-                "INSERT INTO students (name, email, flag, timestamp) VALUES (?, ?, ?, ?)",
-                (name, email, flag, ts)
+                "INSERT INTO students (name, email, register_number, year_dept, phone_number, password, flag, registered) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (name, email, register_number, year_dept, phone_number, default_password, flag, 1)
             )
             student_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
             created += 1
+            print(f"Created student: {name} with default password: student{secrets.token_hex(4)}")
         else:
             student_id = row[0]
             conn.execute(
-                "UPDATE students SET name=?, flag=?, timestamp=? WHERE id=?",
-                (name, flag, ts, student_id)
+                "UPDATE students SET name=?, register_number=?, year_dept=?, phone_number=?, flag=?, registered=? WHERE id=?",
+                (name, register_number, year_dept, phone_number, flag, 1, student_id)
             )
             updated += 1
         conn.commit()
@@ -242,12 +298,33 @@ with open(STUDENTS_FILE, newline='') as f:
 
 print(f"DB path: {DB_PATH}")
 print(f"Students created: {created}, updated: {updated}")
+print("Note: Pre-registered students have default passwords. They should change them after first login.")
 PY
 
+# Create specific flag files for the exam
+echo "FLAG{Anonymous_ftp_flag}" > /home/ftpuser/flag.txt
+echo "FLAG{Anonymous_ftp_flag}" > /home/ftpuser/anonymous_flag.txt
+
+# Create SMB workspace structure with flags
+mkdir -p /srv/smb/idk /srv/smb/thisisit /srv/smb/thisisnot
+echo "FLAG{wrong_flag_1}" > /srv/smb/idk/flag.txt
+echo "FLAG{wrong_flag_2}" > /srv/smb/thisisit/flag.txt
+echo "FLAG{smb_credentials_flag}" > /srv/smb/thisisnot/flag.txt
+
+# Create telnet flags (correct and incorrect)
+echo "FLAG{telnet_root_flag}" > /home/telnetuser/flag_correct.txt
+echo "FLAG{wrong_telnet_flag}" > /home/telnetuser/flag_wrong.txt
+
+# Create additional flag files in the credentials share root
+echo "FLAG{smb_credentials_flag}" > /srv/smb/credentials_flag.txt
+echo "FLAG{wrong_flag_1}" > /srv/smb/idk_flag.txt
+echo "FLAG{wrong_flag_2}" > /srv/smb/thisisit_flag.txt
+echo "FLAG{smb_credentials_flag}" > /srv/smb/thisisnot_flag.txt
+
 # Ensure flag files are owned by service users
-chown -R "$FTP_USER:$FTP_USER" "$FTP_FLAGS_DIR"
-chown -R "$TELNET_USER:$TELNET_USER" "$TELNET_FLAGS_DIR"
-chown -R "$SMB_USER:$SMB_USER" "$SMB_FLAGS_DIR"
+chown -R "$FTP_USER:$FTP_USER" "$FTP_FLAGS_DIR" /home/ftpuser/flag*.txt
+chown -R "$TELNET_USER:$TELNET_USER" "$TELNET_FLAGS_DIR" /home/telnetuser/flag*.txt
+chown -R "$SMB_USER:$SMB_USER" "$SMB_FLAGS_DIR" /srv/smb/*/flag*.txt /srv/smb/*flag*.txt
 
 # Permissions for web app
 chown -R www-data:www-data "$WEB_DIR"
@@ -311,15 +388,17 @@ cat <<INFO
 
 Web portal:  http://$IP_ADDR/  (or use the public IP provided by your VPS)
 
-Service logins for students:
-- FTP    -> user: $FTP_USER    pass: $FTP_PASS
-- Telnet -> user: $TELNET_USER pass: $TELNET_PASS
-- SMB    -> user: $SMB_USER    pass: $SMB_PASS   share: \\${IP_ADDR}\ctfshare
+Service configurations:
+- FTP    -> Anonymous access with password: 12345678
+- Telnet -> Root access (no password required)
+- SMB    -> user: $SMB_USER pass: $SMB_PASS 
+            Shares: credentials, admin, IC
+            Folders: idk, thisisit, thisisnot (flag in thisisnot)
 
 Flag file paths per student (ID is their DB id):
 - FTP:    /home/$FTP_USER/flags/flag_<id>.txt
 - Telnet: /home/$TELNET_USER/flags/flag_<id>.txt
-- SMB:    /srv/smb/flags/flag_<id>.txt  (via share ctfshare/flags/flag_<id>.txt)
+- SMB:    /srv/smb/flags/flag_<id>.txt
 
 Re-run this script to regenerate flags from students.txt.
 INFO

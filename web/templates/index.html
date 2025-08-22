@@ -1,55 +1,75 @@
+# ctf-lab/web/templates/index.html
 {% extends 'base.html' %}
 {% block content %}
-<div class="row g-4">
-  <div class="col-md-6">
-    <div class="card shadow-sm">
-      <div class="card-header bg-primary text-white">Register</div>
-      <div class="card-body">
-        <p class="text-muted small">Enter your name and email exactly as provided to your instructor. Accounts are preloaded from the class roster.</p>
-        <form method="post" action="{{ url_for('register') }}">
-          <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input type="text" name="name" class="form-control" placeholder="Jane Student" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" name="email" class="form-control" placeholder="jane@example.com" required>
-          </div>
-          <button class="btn btn-primary" type="submit">Register</button>
-        </form>
-      </div>
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Register</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{{ url_for('register') }}">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register_number" class="form-label">Register Number</label>
+                                <input type="text" class="form-control" id="register_number" name="register_number" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="year_dept" class="form-label">Year & Department</label>
+                                <input type="text" class="form-control" id="year_dept" name="year_dept" placeholder="e.g., 3rd Year CSE" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phone_number" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone_number" name="phone_number" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Register</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Login</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{{ url_for('login') }}">
+                            <div class="mb-3">
+                                <label for="login-email" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="login-email" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="login-password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="login-password" name="password" required>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">Login</button>
+                        </form>
+                        
+                        <hr>
+                        
+                        <div class="text-center">
+                            <small class="text-muted">
+                                Pre-registered by instructor? 
+                                <a href="{{ url_for('change_password') }}" class="text-decoration-none">Change your default password</a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="col-md-6">
-    <div class="card shadow-sm">
-      <div class="card-header bg-secondary text-white">Login</div>
-      <div class="card-body">
-        <form method="post" action="{{ url_for('login') }}">
-          <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" name="email_login" class="form-control" placeholder="jane@example.com" required>
-          </div>
-          <button class="btn btn-secondary" type="submit">Login</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-<hr class="my-4">
-
-<div class="row">
-  <div class="col-lg-10 mx-auto">
-    <div class="alert alert-info">
-      <h5 class="mb-2">Exam Flow (Students)</h5>
-      <ol class="mb-0">
-        <li>Register or log in above.</li>
-        <li>You will see your Student ID. Use it to locate your flag files: <code>flag_&lt;id&gt;.txt</code>.</li>
-        <li>Scan the target IP with Nmap to find open ports (FTP 21, Telnet 23, SMB 445).</li>
-        <li>Connect to each service with the credentials provided by your instructor.</li>
-        <li>Download/read your flag file and submit it via the portal.</li>
-      </ol>
-    </div>
-  </div>
 </div>
 {% endblock %}

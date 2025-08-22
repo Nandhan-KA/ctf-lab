@@ -1,3 +1,6 @@
-# One student per line, CSV format: Name,Email
-Alice Example,alice@example.com
-Bob Example,bob@example.com
+# One student per line, CSV format: Name,Email,RegisterNumber,YearDept,PhoneNumber
+Alice Johnson,alice.johnson@university.edu,2023001,3rd Year CSE,+1-555-0101
+Bob Smith,bob.smith@university.edu,2023002,2nd Year IT,+1-555-0102
+Carol Davis,carol.davis@university.edu,2023003,4th Year Cybersecurity,+1-555-0103
+David Wilson,david.wilson@university.edu,2023004,1st Year CSE,+1-555-0104
+Eva Brown,eva.brown@university.edu,2023005,3rd Year IT,+1-555-0105

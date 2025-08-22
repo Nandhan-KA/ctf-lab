@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Exam Results</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5 class="alert-heading">Your Score: {{ submission.score }}/6</h5>
+                    <p class="mb-0">Submitted on: {{ submission.submitted_at }}</p>
+                </div>
+
+                <h5 class="text-primary mb-3">Your Answers:</h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <strong>Question 1 (Services):</strong>
+                            <p class="mb-1">{{ submission.question_1 }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Question 2 (FTP Flag):</strong>
+                            <p class="mb-1">{{ submission.question_2 }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Question 3 (SMB Flag):</strong>
+                            <p class="mb-1">{{ submission.question_3 }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <strong>Question 4 (Telnet Flag):</strong>
+                            <p class="mb-1">{{ submission.question_4 }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Question 5 (Service Versions):</strong>
+                            <p class="mb-1">{{ submission.question_5 }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Question 6 (OS):</strong>
+                            <p class="mb-1">{{ submission.question_6 }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+                
+                <div class="text-center">
+                    <a href="/" class="btn btn-primary">Back to Home</a>
+                    <a href="/logout" class="btn btn-outline-secondary">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

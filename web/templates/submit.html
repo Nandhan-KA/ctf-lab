@@ -1,41 +1,123 @@
+# ctf-lab/web/templates/submit.html
 {% extends 'base.html' %}
 {% block content %}
-<div class="row">
-  <div class="col-lg-8 mx-auto">
-    <div class="card shadow-sm mb-4">
-      <div class="card-header bg-success text-white">Welcome, {{ info.name }}</div>
-      <div class="card-body">
-        <p class="mb-1"><strong>Email:</strong> {{ info.email }}</p>
-        <p class="mb-0"><strong>Your Student ID:</strong> <code>{{ info.id }}</code></p>
-      </div>
-    </div>
+<div class="row justify-content-center mt-4">
+    <div class="col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">CTF Exam - Submit Your Answers</h4>
+                <div class="text-white">
+                    <strong>Time Remaining: <span id="countdown">30:00</span></strong>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <strong>Instructions:</strong> You have 30 minutes to complete this exam. Answer all questions based on your investigation of the target server 13.62.104.182.
+                </div>
+                
+                <form method="post" action="{{ url_for('submit_answers') }}" id="examForm">
+                    <div class="mb-4">
+                        <h5 class="text-primary">Question 1:</h5>
+                        <p class="mb-2">What are all the services running on the IP 13.62.104.182?</p>
+                        <input type="text" class="form-control" name="question_1" 
+                               placeholder="e.g., ftp, ssh, http, telnet" required>
+                    </div>
 
-    <div class="card shadow-sm mb-4">
-      <div class="card-header">Your Target Instructions</div>
-      <div class="card-body">
-        <p>Use Nmap to discover open services on the target IP provided by your instructor (e.g., <code>21/tcp</code> FTP, <code>23/tcp</code> Telnet, <code>445/tcp</code> SMB).</p>
-        <ul>
-          <li>Your flag files are named <code>flag_{{ info.id }}.txt</code>.</li>
-          <li>FTP path: <code>/home/ftpuser/flags/flag_{{ info.id }}.txt</code></li>
-          <li>Telnet path: <code>/home/telnetuser/flags/flag_{{ info.id }}.txt</code></li>
-          <li>SMB share path: <code>ctfshare/flags/flag_{{ info.id }}.txt</code></li>
-        </ul>
-        <p>Retrieve any one of your flags and submit it below in the format: <code>FLAG{...}</code>.</p>
-      </div>
-    </div>
+                    <div class="mb-4">
+                        <h5 class="text-primary">Question 2:</h5>
+                        <p class="mb-2">Flag for FTP (connect using user: Anonymous, pass: 12345678)</p>
+                        <input type="text" class="form-control" name="question_2" 
+                               placeholder="FLAG{...}" required>
+                    </div>
 
-    <div class="card shadow-sm">
-      <div class="card-header">Submit Your Flag</div>
-      <div class="card-body">
-        <form method="post" action="{{ url_for('submit') }}">
-          <div class="mb-3">
-            <label class="form-label">Flag</label>
-            <input type="text" name="flag" class="form-control" placeholder="FLAG{...}" required>
-          </div>
-          <button class="btn btn-primary" type="submit">Submit</button>
-        </form>
-      </div>
+                    <div class="mb-4">
+                        <h5 class="text-primary">Question 3:</h5>
+                        <p class="mb-2">Flag for SMB (use smbclient //13.62.104.182/credentials, check all three folders: idk, thisisit, thisisnot - the flag in thisisnot folder is the answer)</p>
+                        <input type="text" class="form-control" name="question_3" 
+                               placeholder="FLAG{...}" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="text-primary">Question 4:</h5>
+                        <p class="mb-2">Telnet flag (connect using root without password, there are 2 flags - find the correct one)</p>
+                        <input type="text" class="form-control" name="question_4" 
+                               placeholder="FLAG{...}" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="text-primary">Question 5:</h5>
+                        <p class="mb-2">What is the version of FTP, SMB, and Telnet running on the server 13.62.104.182?</p>
+                        <input type="text" class="form-control" name="question_5" 
+                               placeholder="e.g., vsftpd 2.0.8 or later, SMB version info, telnet closed" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="text-primary">Question 6:</h5>
+                        <p class="mb-2">What type of operating system is running on the server?</p>
+                        <input type="text" class="form-control" name="question_6" 
+                               placeholder="e.g., Linux" required>
+                    </div>
+
+                    <div class="d-grid">
+                        <button class="btn btn-primary btn-lg" type="submit" id="submitBtn">
+                            Submit All Answers
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
+
+<script>
+let timeRemaining = 30 * 60; // 30 minutes in seconds
+let timerInterval;
+
+function updateCountdown() {
+    const minutes = Math.floor(timeRemaining / 60);
+    const seconds = timeRemaining % 60;
+    document.getElementById('countdown').textContent = 
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    if (timeRemaining <= 0) {
+        clearInterval(timerInterval);
+        document.getElementById('countdown').textContent = '00:00';
+        document.getElementById('submitBtn').disabled = true;
+        alert('Time is up! You cannot submit answers anymore.');
+        window.location.href = '/time_expired';
+    }
+    
+    timeRemaining--;
+}
+
+function startTimer() {
+    updateCountdown();
+    timerInterval = setInterval(updateCountdown, 1000);
+}
+
+// Start timer when page loads
+document.addEventListener('DOMContentLoaded', startTimer);
+
+// Check time remaining from server
+function checkServerTime() {
+    fetch('/api/time_remaining')
+        .then(response => response.json())
+        .then(data => {
+            if (data.expired) {
+                clearInterval(timerInterval);
+                document.getElementById('countdown').textContent = '00:00';
+                document.getElementById('submitBtn').disabled = true;
+                alert('Time limit exceeded! You cannot submit answers anymore.');
+                window.location.href = '/time_expired';
+            } else {
+                timeRemaining = data.remaining;
+                updateCountdown();
+            }
+        })
+        .catch(error => console.error('Error checking time:', error));
+}
+
+// Check server time every 30 seconds
+setInterval(checkServerTime, 30000);
+</script>
 {% endblock %}
