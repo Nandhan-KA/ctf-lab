@@ -1,6 +1,26 @@
-# One student per line, CSV format: Name,Email,RegisterNumber,YearDept,PhoneNumber
-Alice Johnson,alice.johnson@university.edu,2023001,3rd Year CSE,+1-555-0101
-Bob Smith,bob.smith@university.edu,2023002,2nd Year IT,+1-555-0102
-Carol Davis,carol.davis@university.edu,2023003,4th Year Cybersecurity,+1-555-0103
-David Wilson,david.wilson@university.edu,2023004,1st Year CSE,+1-555-0104
-Eva Brown,eva.brown@university.edu,2023005,3rd Year IT,+1-555-0105
+# Student data: RollNo,Name
+24ma027,REVATHY S
+e23el010,HEMAJA C
+e25ca120,S.DHIVYA DHARSHINI
+e25bb011,KEERTHANA S
+e25bb033,TEJA V
+e24bi065,VIDULA R P
+e25cc235,VAISHNAVI M
+e25co214,PRIYADHARSHINI V
+e25co231,R. SANJANA
+e25cs127,MANISHA V
+e25cs135,PRATHIKSHA B
+e24cg040,THASNEEM SUBAIDA N
+e24ds006,BALA CHANDRIKA N
+e24ds024,LAVANYAA B R
+e24ds028,MALA S
+e24ds030,MONISHA V
+e24ds052,SHARMILAA S
+e24bi005,ANUMITHA T R S
+e24bb052,THARANI V
+e24bb010,DIVYADHARSHINI B
+e25co265,D.HARITHA
+e25cc217,SANDHIYA K
+e24bc143,K.JAYASUDHA
+e24bc133,HARINI U
+e24bc158,M.MAHALAKSHMI

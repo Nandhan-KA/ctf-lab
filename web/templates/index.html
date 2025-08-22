@@ -2,71 +2,70 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="row justify-content-center mt-5">
-    <div class="col-md-8">
-        <div class="row g-4">
-            <div class="col-md-6">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Register</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="post" action="{{ url_for('register') }}">
-                            <div class="mb-3">
-                                <label for="name" class="form-label">Full Name</label>
-                                <input type="text" class="form-control" id="name" name="name" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email address</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="register_number" class="form-label">Register Number</label>
-                                <input type="text" class="form-control" id="register_number" name="register_number" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="year_dept" class="form-label">Year & Department</label>
-                                <input type="text" class="form-control" id="year_dept" name="year_dept" placeholder="e.g., 3rd Year CSE" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="phone_number" class="form-label">Phone Number</label>
-                                <input type="tel" class="form-control" id="phone_number" name="phone_number" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">Register</button>
-                        </form>
-                    </div>
-                </div>
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">CTF Lab Exam Login</h4>
             </div>
-            <div class="col-md-6">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0">Login</h5>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Welcome to the CTF Lab Exam!</strong><br>
+                    You have 30 minutes to complete 6 questions. Select your roll number and enter your password to begin.
+                </div>
+                
+                <form method="post" action="{{ url_for('login') }}">
+                    <div class="mb-3">
+                        <label for="roll_number" class="form-label">Select Your Roll Number</label>
+                        <select class="form-select form-select-lg" id="roll_number" name="roll_number" required>
+                            <option value="">Choose your roll number...</option>
+                            <option value="24ma027">24ma027 - REVATHY S</option>
+                            <option value="e23el010">e23el010 - HEMAJA C</option>
+                            <option value="e25ca120">e25ca120 - S.DHIVYA DHARSHINI</option>
+                            <option value="e25bb011">e25bb011 - KEERTHANA S</option>
+                            <option value="e25bb033">e25bb033 - TEJA V</option>
+                            <option value="e24bi065">e24bi065 - VIDULA R P</option>
+                            <option value="e25cc235">e25cc235 - VAISHNAVI M</option>
+                            <option value="e25co214">e25co214 - PRIYADHARSHINI V</option>
+                            <option value="e25co231">e25co231 - R. SANJANA</option>
+                            <option value="e25cs127">e25cs127 - MANISHA V</option>
+                            <option value="e25cs135">e25cs135 - PRATHIKSHA B</option>
+                            <option value="e24cg040">e24cg040 - THASNEEM SUBAIDA N</option>
+                            <option value="e24ds006">e24ds006 - BALA CHANDRIKA N</option>
+                            <option value="e24ds024">e24ds024 - LAVANYAA B R</option>
+                            <option value="e24ds028">e24ds028 - MALA S</option>
+                            <option value="e24ds030">e24ds030 - MONISHA V</option>
+                            <option value="e24ds052">e24ds052 - SHARMILAA S</option>
+                            <option value="e24bi005">e24bi005 - ANUMITHA T R S</option>
+                            <option value="e24bb052">e24bb052 - THARANI V</option>
+                            <option value="e24bb010">e24bb010 - DIVYADHARSHINI B</option>
+                            <option value="e25co265">e25co265 - D.HARITHA</option>
+                            <option value="e25cc217">e25cc217 - SANDHIYA K</option>
+                            <option value="e24bc143">e24bc143 - K.JAYASUDHA</option>
+                            <option value="e24bc133">e24bc133 - HARINI U</option>
+                            <option value="e24bc158">e24bc158 - M.MAHALAKSHMI</option>
+                        </select>
                     </div>
-                    <div class="card-body">
-                        <form method="post" action="{{ url_for('login') }}">
-                            <div class="mb-3">
-                                <label for="login-email" class="form-label">Email address</label>
-                                <input type="email" class="form-control" id="login-email" name="email" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="login-password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="login-password" name="password" required>
-                            </div>
-                            <button type="submit" class="btn btn-success w-100">Login</button>
-                        </form>
-                        
-                        <hr>
-                        
-                        <div class="text-center">
-                            <small class="text-muted">
-                                Pre-registered by instructor? 
-                                <a href="{{ url_for('change_password') }}" class="text-decoration-none">Change your default password</a>
-                            </small>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control form-control-lg" id="password" name="password" required>
+                        <div class="form-text">
+                            Use the default password provided by your instructor, or change it using the link below.
                         </div>
                     </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Start Exam</button>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <small class="text-muted">
+                        Need to change your password? 
+                        <a href="{{ url_for('change_password') }}" class="text-decoration-none">Click here</a>
+                    </small>
                 </div>
             </div>
         </div>

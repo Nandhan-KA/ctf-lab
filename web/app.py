@@ -23,11 +23,8 @@ def ensure_schema():
         cursor.executescript('''
             CREATE TABLE IF NOT EXISTS students (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                roll_number TEXT UNIQUE NOT NULL,
                 name TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                register_number TEXT UNIQUE NOT NULL,
-                year_dept TEXT NOT NULL,
-                phone_number TEXT NOT NULL,
                 password TEXT NOT NULL,
                 flag TEXT NOT NULL,
                 registered INTEGER DEFAULT 0,
@@ -84,58 +81,19 @@ def check_time_limit(f):
 def index():
     return render_template('index.html')
 
-@app.route('/register', methods=['POST'])
-def register():
-    name = request.form.get('name')
-    email = request.form.get('email')
-    register_number = request.form.get('register_number')
-    year_dept = request.form.get('year_dept')
-    phone_number = request.form.get('phone_number')
-    password = request.form.get('password')
-    
-    if not all([name, email, register_number, year_dept, phone_number, password]):
-        flash('All fields are required!', 'danger')
-        return redirect(url_for('index'))
-    
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT id FROM students WHERE email = ? OR register_number = ?', (email, register_number))
-            if cursor.fetchone():
-                flash('Email or Register Number already registered!', 'danger')
-                return redirect(url_for('index'))
-            
-            hashed_password = generate_password_hash(password)
-            flag = f'FLAG_{name.replace(" ", "")}_{os.urandom(8).hex()}'
-            cursor.execute(
-                'INSERT INTO students (name, email, register_number, year_dept, phone_number, password, flag, registered) VALUES (?, ?, ?, ?, ?, ?, ?, 1)',
-                (name, email, register_number, year_dept, phone_number, hashed_password, flag)
-            )
-            student_id = cursor.lastrowid
-            conn.commit()
-            
-            session['student_id'] = student_id
-            session['student_name'] = name
-            flash('Registration successful! Please login to start the exam.', 'success')
-            return redirect(url_for('index'))
-            
-    except Exception as e:
-        flash(f'Error during registration: {str(e)}', 'danger')
-        return redirect(url_for('index'))
-
 @app.route('/login', methods=['POST'])
 def login():
-    email = request.form.get('email')
+    roll_number = request.form.get('roll_number')
     password = request.form.get('password')
     
-    if not all([email, password]):
-        flash('Email and password are required!', 'danger')
+    if not all([roll_number, password]):
+        flash('Roll number and password are required!', 'danger')
         return redirect(url_for('index'))
     
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT id, name, password, registered FROM students WHERE email = ?', (email,))
+            cursor.execute('SELECT id, name, password, registered FROM students WHERE roll_number = ?', (roll_number,))
             student = cursor.fetchone()
             
             if student and check_password_hash(student['password'], password):
@@ -153,6 +111,7 @@ def login():
                     
                     session['student_id'] = student['id']
                     session['student_name'] = student['name']
+                    session['roll_number'] = roll_number
                     session['login_time'] = login_time.isoformat()
                     session['time_limit'] = time_limit.isoformat()
                     
@@ -162,7 +121,7 @@ def login():
                     flash('Please complete your registration first.', 'warning')
                     return redirect(url_for('index'))
             else:
-                flash('Invalid email or password!', 'danger')
+                flash('Invalid roll number or password!', 'danger')
                 return redirect(url_for('index'))
     except Exception as e:
         flash(f'Error during login: {str(e)}', 'danger')
@@ -171,12 +130,12 @@ def login():
 @app.route('/change_password', methods=['GET', 'POST'])
 def change_password():
     if request.method == 'POST':
-        email = request.form.get('email')
+        roll_number = request.form.get('roll_number')
         current_password = request.form.get('current_password')
         new_password = request.form.get('new_password')
         confirm_password = request.form.get('confirm_password')
         
-        if not all([email, current_password, new_password, confirm_password]):
+        if not all([roll_number, current_password, new_password, confirm_password]):
             flash('All fields are required!', 'danger')
             return render_template('change_password.html')
         
@@ -187,7 +146,7 @@ def change_password():
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute('SELECT id, password FROM students WHERE email = ?', (email,))
+                cursor.execute('SELECT id, password FROM students WHERE roll_number = ?', (roll_number,))
                 student = cursor.fetchone()
                 
                 if student and check_password_hash(student['password'], current_password):
@@ -202,7 +161,7 @@ def change_password():
                     flash('Password changed successfully! You can now login with your new password.', 'success')
                     return redirect(url_for('index'))
                 else:
-                    flash('Invalid email or current password!', 'danger')
+                    flash('Invalid roll number or current password!', 'danger')
         except Exception as e:
             flash(f'Error changing password: {str(e)}', 'danger')
     

@@ -215,11 +215,8 @@ c.execute(
     """
     CREATE TABLE IF NOT EXISTS students (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        roll_number TEXT UNIQUE NOT NULL,
         name TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        register_number TEXT UNIQUE NOT NULL,
-        year_dept TEXT NOT NULL,
-        phone_number TEXT NOT NULL,
         password TEXT NOT NULL,
         flag TEXT NOT NULL,
         registered INTEGER DEFAULT 0,
@@ -257,30 +254,30 @@ with open(STUDENTS_FILE, newline='') as f:
         if not line or line.startswith('#'):
             continue
         parts = [p.strip() for p in line.split(',')]
-        if len(parts) < 5:
+        if len(parts) < 2:
             continue
-        name, email, register_number, year_dept, phone_number = parts[0], parts[1].lower(), parts[2], parts[3], parts[4]
+        roll_number, name = parts[0], parts[1]
         flag = f"FLAG{{{name.replace(' ', '')}_{secrets.token_hex(8)}}}"
         
         # Generate a default password for pre-registered students
         default_password = generate_password_hash(f"student{secrets.token_hex(4)}")
         
         # Upsert logic
-        cur = conn.execute("SELECT id FROM students WHERE email = ? OR register_number = ?", (email, register_number))
+        cur = conn.execute("SELECT id FROM students WHERE roll_number = ?", (roll_number,))
         row = cur.fetchone()
         if row is None:
             conn.execute(
-                "INSERT INTO students (name, email, register_number, year_dept, phone_number, password, flag, registered) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                (name, email, register_number, year_dept, phone_number, default_password, flag, 1)
+                "INSERT INTO students (roll_number, name, password, flag, registered) VALUES (?, ?, ?, ?, ?)",
+                (roll_number, name, default_password, flag, 1)
             )
             student_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
             created += 1
-            print(f"Created student: {name} with default password: student{secrets.token_hex(4)}")
+            print(f"Created student: {name} ({roll_number}) with default password: student{secrets.token_hex(4)}")
         else:
             student_id = row[0]
             conn.execute(
-                "UPDATE students SET name=?, register_number=?, year_dept=?, phone_number=?, flag=?, registered=? WHERE id=?",
-                (name, register_number, year_dept, phone_number, flag, 1, student_id)
+                "UPDATE students SET name=?, flag=?, registered=? WHERE id=?",
+                (name, flag, 1, student_id)
             )
             updated += 1
         conn.commit()
