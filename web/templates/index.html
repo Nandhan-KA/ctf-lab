@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white">Register</div>
+      <div class="card-body">
+        <p class="text-muted small">Enter your name and email exactly as provided to your instructor. Accounts are preloaded from the class roster.</p>
+        <form method="post" action="{{ url_for('register') }}">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" class="form-control" placeholder="Jane Student" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" placeholder="jane@example.com" required>
+          </div>
+          <button class="btn btn-primary" type="submit">Register</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-secondary text-white">Login</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('login') }}">
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email_login" class="form-control" placeholder="jane@example.com" required>
+          </div>
+          <button class="btn btn-secondary" type="submit">Login</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="my-4">
+
+<div class="row">
+  <div class="col-lg-10 mx-auto">
+    <div class="alert alert-info">
+      <h5 class="mb-2">Exam Flow (Students)</h5>
+      <ol class="mb-0">
+        <li>Register or log in above.</li>
+        <li>You will see your Student ID. Use it to locate your flag files: <code>flag_&lt;id&gt;.txt</code>.</li>
+        <li>Scan the target IP with Nmap to find open ports (FTP 21, Telnet 23, SMB 445).</li>
+        <li>Connect to each service with the credentials provided by your instructor.</li>
+        <li>Download/read your flag file and submit it via the portal.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+{% endblock %}

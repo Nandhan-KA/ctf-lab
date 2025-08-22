@@ -1,0 +1,11 @@
+# /etc/xinetd.d/telnet
+service telnet
+{
+    flags           = REUSE
+    socket_type     = stream
+    wait            = no
+    user            = root
+    server          = /usr/sbin/in.telnetd
+    log_on_failure  += USERID
+    disable         = no
+}

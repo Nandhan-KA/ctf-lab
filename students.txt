@@ -1,0 +1,3 @@
+# One student per line, CSV format: Name,Email
+Alice Example,alice@example.com
+Bob Example,bob@example.com

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row">
+  <div class="col-lg-8 mx-auto">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-success text-white">Welcome, {{ info.name }}</div>
+      <div class="card-body">
+        <p class="mb-1"><strong>Email:</strong> {{ info.email }}</p>
+        <p class="mb-0"><strong>Your Student ID:</strong> <code>{{ info.id }}</code></p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-header">Your Target Instructions</div>
+      <div class="card-body">
+        <p>Use Nmap to discover open services on the target IP provided by your instructor (e.g., <code>21/tcp</code> FTP, <code>23/tcp</code> Telnet, <code>445/tcp</code> SMB).</p>
+        <ul>
+          <li>Your flag files are named <code>flag_{{ info.id }}.txt</code>.</li>
+          <li>FTP path: <code>/home/ftpuser/flags/flag_{{ info.id }}.txt</code></li>
+          <li>Telnet path: <code>/home/telnetuser/flags/flag_{{ info.id }}.txt</code></li>
+          <li>SMB share path: <code>ctfshare/flags/flag_{{ info.id }}.txt</code></li>
+        </ul>
+        <p>Retrieve any one of your flags and submit it below in the format: <code>FLAG{...}</code>.</p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-header">Submit Your Flag</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('submit') }}">
+          <div class="mb-3">
+            <label class="form-label">Flag</label>
+            <input type="text" name="flag" class="form-control" placeholder="FLAG{...}" required>
+          </div>
+          <button class="btn btn-primary" type="submit">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

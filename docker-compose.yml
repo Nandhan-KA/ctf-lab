@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  web:
+    image: python:3.11-slim
+    container_name: ctf_lab_web
+    working_dir: /app/web
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./:/app
+    ports:
+      - "5000:5000"
+    command: bash -lc "pip install -r web/requirements.txt && gunicorn -w 2 -b 0.0.0.0:5000 app:app"
+    restart: unless-stopped
