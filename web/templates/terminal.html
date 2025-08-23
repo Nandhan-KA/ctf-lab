@@ -634,6 +634,10 @@ Note: Flags are unique to each student and based on your roll number.`;
                 inputPrompt = step.prompt;
                 waitingForInput = true;
                 addOutput(step.prompt, 'prompt');
+            } else {
+                // Already authenticated, show ftp prompt
+                addOutput('ftp> ', 'prompt');
+                waitingForInput = true;
             }
         }
 
@@ -647,6 +651,10 @@ Note: Flags are unique to each student and based on your roll number.`;
                 inputPrompt = step.prompt;
                 waitingForInput = true;
                 addOutput(step.prompt, 'prompt');
+            } else {
+                // Already authenticated, show smb prompt
+                addOutput('smb: \\> ', 'prompt');
+                waitingForInput = true;
             }
         }
 
@@ -661,6 +669,10 @@ Note: Flags are unique to each student and based on your roll number.`;
                 inputPrompt = step.prompt;
                 waitingForInput = true;
                 addOutput(step.prompt, 'prompt');
+            } else {
+                // Already authenticated, show telnet prompt
+                addOutput('root@ctf-lab:~# ', 'prompt');
+                waitingForInput = true;
             }
         }
 
@@ -694,11 +706,15 @@ Note: Flags are unique to each student and based on your roll number.`;
                     addOutput(step.response, 'output');
                     currentSession.step++;
                     currentSession.authenticated = true;
-                    addOutput('ftp> ', 'prompt');
+                    if (currentSession.step >= steps.length) {
+                        addOutput('ftp> ', 'prompt');
+                        waitingForInput = true;
+                    }
                 } else {
                     addOutput(input, 'input');
                     addOutput('530 Login incorrect.', 'error');
                     addOutput('ftp> ', 'prompt');
+                    waitingForInput = true;
                 }
             } else {
                 // Handle FTP commands after login
@@ -711,6 +727,7 @@ drwxr-xr-x    2 0        0            4096 Dec 15 10:30 ..
 -rw-r--r--    1 0        0             125 Dec 15 10:30 ${sessionData.flag}
 226 Directory send OK.`, 'output');
                     addOutput('ftp> ', 'prompt');
+                    waitingForInput = true;
                 } else if (input.startsWith('get ')) {
                     const filename = input.substring(4);
                     if (filename === sessionData.flag) {
@@ -720,17 +737,21 @@ drwxr-xr-x    2 0        0            4096 Dec 15 10:30 ..
                         addOutput('125 bytes received in 0.00 secs (125.00 Kbytes/sec)', 'output');
                         showFlagPopup(sessionData.flag);
                         addOutput('ftp> ', 'prompt');
+                        waitingForInput = true;
                     } else {
                         addOutput('550 Failed to open file.', 'error');
                         addOutput('ftp> ', 'prompt');
+                        waitingForInput = true;
                     }
                 } else if (input === 'quit') {
                     addOutput('221 Goodbye.', 'output');
                     currentSession = null;
                     sessionType = null;
+                    waitingForInput = false;
                 } else {
                     addOutput('500 Unknown command.', 'error');
                     addOutput('ftp> ', 'prompt');
+                    waitingForInput = true;
                 }
             }
         }
@@ -747,6 +768,7 @@ drwxr-xr-x    2 0        0            4096 Dec 15 10:30 ..
                 currentSession.step++;
                 currentSession.authenticated = true;
                 addOutput('smb: \\> ', 'prompt');
+                waitingForInput = true;
             } else {
                 // Handle SMB commands after login
                 addOutput(input, 'input');
@@ -757,25 +779,31 @@ drwxr-xr-x    2 0        0            4096 Dec 15 10:30 ..
                     addOutput('', 'output');
                     addOutput('        65536 blocks of size 1024. 65536 blocks available', 'output');
                     addOutput('smb: \\> ', 'prompt');
+                    waitingForInput = true;
                 } else if (input === 'cd thisisnot') {
                     currentSession.currentDir = '/thisisnot';
                     addOutput('smb: \\thisisnot\\> ', 'prompt');
+                    waitingForInput = true;
                 } else if (input.startsWith('get ')) {
                     const filename = input.substring(4);
                     if (filename === sessionData.flag) {
                         addOutput(`getting file \\thisisnot\\${filename} of size 25 as ${filename} (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)`, 'output');
                         showFlagPopup(sessionData.flag);
                         addOutput('smb: \\thisisnot\\> ', 'prompt');
+                        waitingForInput = true;
                     } else {
                         addOutput('NT_STATUS_OBJECT_NAME_NOT_FOUND', 'error');
                         addOutput('smb: \\thisisnot\\> ', 'prompt');
+                        waitingForInput = true;
                     }
                 } else if (input === 'quit') {
                     currentSession = null;
                     sessionType = null;
+                    waitingForInput = false;
                 } else {
                     addOutput('NT_STATUS_INVALID_PARAMETER', 'error');
                     addOutput('smb: \\> ', 'prompt');
+                    waitingForInput = true;
                 }
             }
         }
@@ -793,11 +821,15 @@ drwxr-xr-x    2 0        0            4096 Dec 15 10:30 ..
                     addOutput(step.response, 'output');
                     currentSession.step++;
                     currentSession.authenticated = true;
-                    addOutput('root@ctf-lab:~# ', 'prompt');
+                    if (currentSession.step >= steps.length) {
+                        addOutput('root@ctf-lab:~# ', 'prompt');
+                        waitingForInput = true;
+                    }
                 } else {
                     addOutput(input, 'input');
                     addOutput('Login incorrect', 'error');
                     addOutput('ctf-lab login: ', 'prompt');
+                    waitingForInput = true;
                 }
             } else {
                 // Handle Telnet commands after login
@@ -805,23 +837,28 @@ drwxr-xr-x    2 0        0            4096 Dec 15 10:30 ..
                 if (input === 'ls') {
                     addOutput(sessionData.flag, 'output');
                     addOutput('root@ctf-lab:~# ', 'prompt');
+                    waitingForInput = true;
                 } else if (input.startsWith('cat ')) {
                     const filename = input.substring(4);
                     if (filename === sessionData.flag) {
                         addOutput(sessionData.flag, 'output');
                         showFlagPopup(sessionData.flag);
                         addOutput('root@ctf-lab:~# ', 'prompt');
+                        waitingForInput = true;
                     } else {
                         addOutput('cat: No such file or directory', 'error');
                         addOutput('root@ctf-lab:~# ', 'prompt');
+                        waitingForInput = true;
                     }
                 } else if (input === 'exit') {
                     addOutput('Connection closed by foreign host.', 'output');
                     currentSession = null;
                     sessionType = null;
+                    waitingForInput = false;
                 } else {
                     addOutput(`bash: ${input}: command not found`, 'error');
                     addOutput('root@ctf-lab:~# ', 'prompt');
+                    waitingForInput = true;
                 }
             }
         }
