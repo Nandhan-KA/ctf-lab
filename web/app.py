@@ -115,7 +115,7 @@ def login():
             session['login_time'] = login_time.isoformat()
             session['time_limit'] = time_limit.isoformat()
             
-            return redirect(url_for('submit_answers'))
+            return redirect(url_for('terminal'))
         else:
             flash('Invalid roll number or password')
             return redirect(url_for('index'))
@@ -155,6 +155,12 @@ def change_password():
                 return render_template('change_password.html')
     
     return render_template('change_password.html')
+
+@app.route('/terminal')
+@login_required
+@check_time_limit
+def terminal():
+    return render_template('terminal.html')
 
 @app.route('/submit_answers', methods=['GET', 'POST'])
 @login_required

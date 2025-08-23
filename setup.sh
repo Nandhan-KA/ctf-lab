@@ -1,163 +1,32 @@
 #!/bin/bash
 
-# CTF Lab Setup Script
-# This script sets up a complete CTF lab environment with FTP, SMB, Telnet, and Web services
+# CTF Lab Setup Script - Simulation-Based System
+# This script sets up a web-based CTF lab simulation environment
 
 set -e  # Exit on any error
 
-echo "🚀 Starting CTF Lab Setup..."
+echo "🚀 Starting CTF Lab Simulation Setup..."
 
-# Update system
+# Check if we're in the right directory
+if [ ! -f "web/app.py" ]; then
+    echo "❌ Error: Please run this script from the ctf-lab directory"
+    exit 1
+fi
+
+# Update system packages
 echo "📦 Updating system packages..."
 sudo apt update
 
 # Install required packages
 echo "📦 Installing required packages..."
-sudo apt install -y python3 python3-pip python3-venv nginx vsftpd samba openbsd-inetd telnetd git
-
-# Create project directory
-PROJECT_DIR="/home/ubuntu/ctf-lab"
-echo "📁 Setting up project directory: $PROJECT_DIR"
-
-# Create service users
-echo "👤 Creating service users..."
-sudo useradd -m -s /bin/bash ftpuser 2>/dev/null || echo "ftpuser already exists"
-sudo useradd -m -s /bin/bash telnetuser 2>/dev/null || echo "telnetuser already exists"
-sudo useradd -m -s /bin/bash smbuser 2>/dev/null || echo "smbuser already exists"
-
-# Set passwords for service users
-echo "ftpuser:ftpuserpass" | sudo chpasswd
-echo "telnetuser:telnetuserpass" | sudo chpasswd
-echo "smbuser:smbuserpass" | sudo chpasswd
-
-# Configure vsftpd for anonymous access
-echo "📁 Configuring vsftpd..."
-sudo tee /etc/vsftpd.conf > /dev/null <<EOF
-listen=YES
-listen_ipv6=NO
-anonymous_enable=YES
-anon_root=/home/ftpuser
-anon_upload_enable=NO
-anon_mkdir_write_enable=NO
-anon_other_write_enable=NO
-local_enable=YES
-write_enable=YES
-local_umask=022
-dirmessage_enable=YES
-use_localtime=YES
-xferlog_enable=YES
-connect_from_port_20=YES
-chroot_local_user=YES
-allow_writeable_chroot=YES
-secure_chroot_dir=/var/run/vsftpd/empty
-pam_service_name=vsftpd
-rsa_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
-rsa_private_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
-ssl_enable=NO
-pasv_enable=YES
-pasv_min_port=40000
-pasv_max_port=40100
-EOF
-
-# Configure Samba
-echo "📁 Configuring Samba..."
-sudo tee /etc/samba/smb.conf > /dev/null <<EOF
-[global]
-   workgroup = WORKGROUP
-   server string = CTF Lab SMB Server
-   security = user
-   map to guest = bad user
-   guest account = smbuser
-   log file = /var/log/samba/%m.log
-   max log size = 50
-
-[credentials]
-   comment = CTF Credentials Share
-   path = /srv/smb
-   browseable = yes
-   writable = yes
-   guest ok = yes
-   create mask = 0644
-   directory mask = 0755
-
-[admin]
-   comment = Admin Share
-   path = /srv/smb
-   browseable = yes
-   writable = yes
-   guest ok = yes
-
-[IC]
-   comment = IC Share
-   path = /srv/smb
-   browseable = yes
-   writable = yes
-   guest ok = yes
-EOF
-
-# Create SMB directories and files
-echo "📁 Creating SMB directory structure..."
-sudo mkdir -p /srv/smb
-sudo mkdir -p /srv/smb/idk
-sudo mkdir -p /srv/smb/thisisit
-sudo mkdir -p /srv/smb/thisisnot
-
-# Create flag files
-echo "🏴 Creating flag files..."
-sudo tee /home/ftpuser/flag.txt > /dev/null <<EOF
-FLAG{Anonymous_ftp_flag}
-EOF
-
-sudo tee /home/ftpuser/anonymous_flag.txt > /dev/null <<EOF
-FLAG{Anonymous_ftp_flag}
-EOF
-
-sudo tee /home/telnetuser/flag_correct.txt > /dev/null <<EOF
-FLAG{telnet_root_flag}
-EOF
-
-sudo tee /home/telnetuser/flag_wrong.txt > /dev/null <<EOF
-FLAG{wrong_telnet_flag}
-EOF
-
-sudo tee /srv/smb/idk/flag.txt > /dev/null <<EOF
-FLAG{wrong_flag_1}
-EOF
-
-sudo tee /srv/smb/thisisit/flag.txt > /dev/null <<EOF
-FLAG{wrong_flag_2}
-EOF
-
-sudo tee /srv/smb/thisisnot/flag.txt > /dev/null <<EOF
-FLAG{smb_credentials_flag}
-EOF
-
-# Set proper permissions
-echo "🔐 Setting permissions..."
-sudo chown -R ftpuser:ftpuser /home/ftpuser/
-sudo chown -R telnetuser:telnetuser /home/telnetuser/
-sudo chown -R smbuser:smbuser /srv/smb/
-sudo chmod 755 /home/ftpuser/
-sudo chmod 644 /home/ftpuser/*.txt
-sudo chmod 755 /home/telnetuser/
-sudo chmod 644 /home/telnetuser/*.txt
-sudo chmod 755 /srv/smb/
-sudo chmod 755 /srv/smb/*/
-sudo chmod 644 /srv/smb/*/flag.txt
-
-# Configure Telnet via inetd
-echo "🔌 Configuring Telnet..."
-sudo tee /etc/inetd.conf > /dev/null <<EOF
-telnet stream tcp nowait root /usr/sbin/in.telnetd in.telnetd
-EOF
+sudo apt install -y python3 python3-pip python3-venv nginx git
 
 # Set up Python virtual environment
 echo "🐍 Setting up Python environment..."
-cd $PROJECT_DIR/web
+cd web
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-pip install werkzeug
 
 # Create database and populate with student data
 echo "🗄️ Setting up database..."
@@ -208,40 +77,44 @@ cursor.execute('''
 students_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'students.txt')
 default_password = generate_password_hash('default123')
 
-with open(students_file, 'r') as f:
-    for line in f:
-        line = line.strip()
-        if line and not line.startswith('#'):
-            parts = line.split(',')
-            if len(parts) >= 2:
-                roll_number = parts[0].strip()
-                name = parts[1].strip()
-                
-                # Insert or update student
-                cursor.execute('''
-                    INSERT OR REPLACE INTO students (roll_number, name, password, registered)
-                    VALUES (?, ?, ?, 1)
-                ''', (roll_number, name, default_password))
+if os.path.exists(students_file):
+    with open(students_file, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                parts = line.split(',')
+                if len(parts) >= 2:
+                    roll_number = parts[0].strip()
+                    name = parts[1].strip()
+                    
+                    # Insert or update student
+                    cursor.execute('''
+                        INSERT OR REPLACE INTO students (roll_number, name, password, registered)
+                        VALUES (?, ?, ?, 1)
+                    ''', (roll_number, name, default_password))
+    print(f"Added students from {students_file}")
+else:
+    print(f"Warning: {students_file} not found. No students added to database.")
 
 conn.commit()
 conn.close()
 print("Database setup complete!")
 EOF
 
-# Create systemd service for the Flask app
+# Create systemd service for the Flask app (optional)
 echo "🔧 Creating systemd service..."
 sudo tee /etc/systemd/system/ctf-lab.service > /dev/null <<EOF
 [Unit]
-Description=CTF Lab Flask App (gunicorn)
+Description=CTF Lab Simulation Flask App
 After=network.target
 
 [Service]
 Type=exec
 User=www-data
 Group=www-data
-WorkingDirectory=$PROJECT_DIR/web
-Environment=PATH=$PROJECT_DIR/web/venv/bin
-ExecStart=$PROJECT_DIR/web/venv/bin/gunicorn -w 2 -b 127.0.0.1:5000 app:app
+WorkingDirectory=$(pwd)
+Environment=PATH=$(pwd)/venv/bin
+ExecStart=$(pwd)/venv/bin/python app.py
 Restart=always
 RestartSec=3
 
@@ -249,7 +122,7 @@ RestartSec=3
 WantedBy=multi-user.target
 EOF
 
-# Configure Nginx
+# Configure Nginx (optional)
 echo "🌐 Configuring Nginx..."
 sudo tee /etc/nginx/sites-available/ctf-lab > /dev/null <<EOF
 server {
@@ -271,36 +144,46 @@ sudo ln -sf /etc/nginx/sites-available/ctf-lab /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 
 # Set proper ownership for web files
-sudo chown -R www-data:www-data $PROJECT_DIR/web/
+sudo chown -R www-data:www-data $(pwd)/
 
 # Start and enable services
 echo "🚀 Starting services..."
 sudo systemctl daemon-reload
-sudo systemctl enable ctf-lab nginx vsftpd smbd openbsd-inetd
-sudo systemctl start ctf-lab nginx vsftpd smbd openbsd-inetd
+sudo systemctl enable ctf-lab nginx
+sudo systemctl start ctf-lab nginx
 
-# Test services
-echo "🧪 Testing services..."
-sleep 5
+# Test the application
+echo "🧪 Testing application..."
+sleep 3
 
 echo "✅ Setup complete!"
 echo ""
-echo "📋 Service Status:"
-echo "  - Web Portal: http://$(curl -s ifconfig.me)"
-echo "  - FTP: Anonymous access enabled (port 21)"
-echo "  - SMB: credentials share available (port 445)"
-echo "  - Telnet: root access enabled (port 23)"
+echo "📋 Application Information:"
+echo "  - Web Portal: http://$(curl -s ifconfig.me 2>/dev/null || echo 'localhost')"
+echo "  - Local Access: http://localhost:5000"
 echo ""
 echo "👥 Student Login Info:"
 echo "  - Default password: default123"
 echo "  - Students can change password at /change_password"
 echo ""
-echo "🏴 Flag Locations:"
-echo "  - FTP: /home/ftpuser/flag.txt"
-echo "  - SMB: /srv/smb/thisisnot/flag.txt (correct answer)"
-echo "  - Telnet: /home/telnetuser/flag_correct.txt (correct answer)"
+echo "🎯 Simulation Features:"
+echo "  - Web-based terminal emulator"
+echo "  - Simulated FTP, SMB, Telnet services"
+echo "  - Pre-configured flags and responses"
+echo "  - 30-minute exam timer"
 echo ""
-echo "🎯 Exam Details:"
-echo "  - 6 questions, 30-minute time limit"
-echo "  - Target IP: 13.62.104.182"
-echo "  - All services configured and running"
+echo "🏴 Available Flags:"
+echo "  - FTP: FLAG{Anonymous_ftp_flag}"
+echo "  - SMB: FLAG{smb_credentials_flag}"
+echo "  - Telnet: FLAG{telnet_root_flag}"
+echo ""
+echo "🎮 Available Commands:"
+echo "  - nmap 13.62.104.182"
+echo "  - ftp 13.62.104.182"
+echo "  - smbclient //13.62.104.182/credentials"
+echo "  - telnet 13.62.104.182"
+echo ""
+echo "📝 To start manually:"
+echo "  cd web"
+echo "  source venv/bin/activate"
+echo "  python app.py"

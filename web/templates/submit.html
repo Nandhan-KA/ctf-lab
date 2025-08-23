@@ -89,7 +89,7 @@
                     <h5>📋 Instructions:</h5>
                     <ul class="mb-0">
                         <li>You have <strong>30 minutes</strong> to complete all 6 questions</li>
-                        <li>Use network tools like <code>nmap</code>, <code>ftp</code>, <code>smbclient</code>, and <code>telnet</code></li>
+                        <li>Use the <a href="{{ url_for('terminal') }}" class="btn btn-sm btn-primary">Terminal</a> to explore and find the flags</li>
                         <li>Target IP: <strong>13.62.104.182</strong></li>
                         <li>Submit your answers before time runs out</li>
                     </ul>
@@ -109,37 +109,37 @@
                 <form method="POST" action="{{ url_for('submit_answers') }}" id="examForm">
                     <div class="question">
                         <h5>Question 1: Network Services Enumeration</h5>
-                        <p>What services are running on the target IP 13.62.104.182? Use nmap to scan the target and list all open services with their versions.</p>
+                        <p>Use the terminal and run <code>nmap 13.62.104.182</code> to scan the target. What services are running on the target IP?</p>
                         <input type="text" class="form-control" name="q1" placeholder="Enter the nmap scan results showing all open services..." required>
                     </div>
 
                     <div class="question">
                         <h5>Question 2: FTP Flag</h5>
-                        <p>Connect to the FTP server anonymously and retrieve the flag. Use: <code>ftp 13.62.104.182</code> with username "Anonymous" and password "12345678"</p>
+                        <p>In the terminal, run <code>ftp 13.62.104.182</code> and use username "Anonymous" with password "12345678". What flag did you find?</p>
                         <input type="text" class="form-control" name="q2" placeholder="Enter the FTP flag..." required>
                     </div>
 
                     <div class="question">
                         <h5>Question 3: SMB Flag</h5>
-                        <p>Connect to the SMB share "credentials" and find the flag in the "thisisnot" folder. Use: <code>smbclient //13.62.104.182/credentials</code></p>
+                        <p>In the terminal, run <code>smbclient //13.62.104.182/credentials</code> and navigate to the "thisisnot" folder. What flag did you find?</p>
                         <input type="text" class="form-control" name="q3" placeholder="Enter the SMB flag from thisisnot folder..." required>
                     </div>
 
                     <div class="question">
                         <h5>Question 4: Telnet Flag</h5>
-                        <p>Connect to the Telnet service as root without password and find the correct flag. Use: <code>telnet 13.62.104.182</code> and login as root</p>
+                        <p>In the terminal, run <code>telnet 13.62.104.182</code> and login as root (no password). What flag did you find?</p>
                         <input type="text" class="form-control" name="q4" placeholder="Enter the correct Telnet flag..." required>
                     </div>
 
                     <div class="question">
                         <h5>Question 5: Service Versions</h5>
-                        <p>What are the versions of FTP, SMB, and Telnet services running on the server?</p>
+                        <p>Based on your nmap scan results, what are the versions of FTP, SMB, and Telnet services running on the server?</p>
                         <input type="text" class="form-control" name="q5" placeholder="Enter the service versions..." required>
                     </div>
 
                     <div class="question">
                         <h5>Question 6: Operating System</h5>
-                        <p>What operating system is running on the target server?</p>
+                        <p>Based on your nmap scan results, what operating system is running on the target server?</p>
                         <input type="text" class="form-control" name="q6" placeholder="Enter the operating system..." required>
                     </div>
 

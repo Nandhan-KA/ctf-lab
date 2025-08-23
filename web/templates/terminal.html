@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF Lab - Terminal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #1e1e1e;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .terminal-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .terminal-header {
+            background: #2d2d2d;
+            padding: 10px 20px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .terminal-title {
+            color: #00ff00;
+            font-weight: bold;
+        }
+        
+        .timer {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        
+        .terminal-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #000000;
+        }
+        
+        .terminal-output {
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        
+        .command-line {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .prompt {
+            color: #00ff00;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .command-input {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            flex: 1;
+            outline: none;
+        }
+        
+        .command-input:focus {
+            outline: none;
+        }
+        
+        .output-text {
+            color: #cccccc;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .error-text {
+            color: #ff6b6b;
+        }
+        
+        .success-text {
+            color: #00ff00;
+        }
+        
+        .info-text {
+            color: #4ecdc4;
+        }
+        
+        .warning-text {
+            color: #ffd93d;
+        }
+        
+        .navbar {
+            background: #2d2d2d;
+            border-bottom: 1px solid #444;
+        }
+        
+        .navbar-brand {
+            color: #00ff00 !important;
+        }
+        
+        .nav-link {
+            color: #ffffff !important;
+        }
+        
+        .nav-link:hover {
+            color: #00ff00 !important;
+        }
+        
+        .help-panel {
+            background: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .help-title {
+            color: #00ff00;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .help-command {
+            color: #4ecdc4;
+            font-weight: bold;
+        }
+        
+        .help-description {
+            color: #cccccc;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <span class="navbar-brand">🔒 CTF Lab Terminal</span>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-link">Welcome, {{ session.name }} ({{ session.roll_number }})</span>
+                <a class="nav-link" href="{{ url_for('submit_answers') }}">📝 Submit Answers</a>
+                <a class="nav-link" href="{{ url_for('logout') }}">🚪 Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <div class="terminal-title">root@ctf-lab:~#</div>
+            <div class="timer" id="countdown">Time Remaining: 30:00</div>
+        </div>
+        
+        <div class="terminal-body" id="terminalBody">
+            <div class="help-panel">
+                <div class="help-title">📋 Available Commands:</div>
+                <div class="help-command">ls</div>
+                <div class="help-description">List files and directories</div>
+                
+                <div class="help-command">cd [directory]</div>
+                <div class="help-description">Change directory</div>
+                
+                <div class="help-command">nmap [target]</div>
+                <div class="help-description">Network scanner (target: 13.62.104.182)</div>
+                
+                <div class="help-command">ftp [target]</div>
+                <div class="help-description">FTP client (target: 13.62.104.182)</div>
+                
+                <div class="help-command">smbclient [share]</div>
+                <div class="help-description">SMB client (share: //13.62.104.182/credentials)</div>
+                
+                <div class="help-command">telnet [target]</div>
+                <div class="help-description">Telnet client (target: 13.62.104.182)</div>
+                
+                <div class="help-command">clear</div>
+                <div class="help-description">Clear terminal</div>
+                
+                <div class="help-command">help</div>
+                <div class="help-description">Show this help</div>
+            </div>
+            
+            <div class="terminal-output">
+                <div class="output-text success-text">Welcome to CTF Lab Terminal Simulator!</div>
+                <div class="output-text">Type 'help' for available commands.</div>
+                <div class="output-text">Target IP: 13.62.104.182</div>
+            </div>
+            
+            <div class="command-line">
+                <span class="prompt">root@ctf-lab:~#</span>
+                <input type="text" class="command-input" id="commandInput" placeholder="Enter command..." autocomplete="off">
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const terminalBody = document.getElementById('terminalBody');
+        const commandInput = document.getElementById('commandInput');
+        let currentDirectory = '/home/root';
+        let commandHistory = [];
+        let historyIndex = -1;
+
+        // Focus on command input
+        commandInput.focus();
+
+        // Handle command execution
+        commandInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const command = commandInput.value.trim();
+                if (command) {
+                    executeCommand(command);
+                    commandInput.value = '';
+                    commandHistory.push(command);
+                    historyIndex = commandHistory.length;
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    commandInput.value = commandHistory[historyIndex];
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    commandInput.value = commandHistory[historyIndex];
+                } else {
+                    historyIndex = commandHistory.length;
+                    commandInput.value = '';
+                }
+            }
+        });
+
+        function executeCommand(command) {
+            // Add command to output
+            addOutput(`<span class="prompt">root@ctf-lab:~#</span> ${command}`, 'command');
+            
+            // Parse and execute command
+            const parts = command.split(' ');
+            const cmd = parts[0].toLowerCase();
+            const args = parts.slice(1);
+            
+            switch(cmd) {
+                case 'ls':
+                    handleLs(args);
+                    break;
+                case 'cd':
+                    handleCd(args);
+                    break;
+                case 'nmap':
+                    handleNmap(args);
+                    break;
+                case 'ftp':
+                    handleFtp(args);
+                    break;
+                case 'smbclient':
+                    handleSmbclient(args);
+                    break;
+                case 'telnet':
+                    handleTelnet(args);
+                    break;
+                case 'clear':
+                    clearTerminal();
+                    break;
+                case 'help':
+                    showHelp();
+                    break;
+                case 'pwd':
+                    addOutput(currentDirectory, 'output');
+                    break;
+                default:
+                    addOutput(`bash: ${cmd}: command not found`, 'error');
+            }
+            
+            // Add new command line
+            addCommandLine();
+        }
+
+        function handleLs(args) {
+            const output = `total 8
+drwxr-xr-x 2 root root 4096 Dec 15 10:30 .
+drwxr-xr-x 3 root root 4096 Dec 15 10:30 ..
+-rw-r--r-- 1 root root  125 Dec 15 10:30 README.txt
+-rw-r--r-- 1 root root  256 Dec 15 10:30 tools.txt`;
+            addOutput(output, 'output');
+        }
+
+        function handleCd(args) {
+            if (args.length === 0 || args[0] === '~' || args[0] === '/home/root') {
+                currentDirectory = '/home/root';
+            } else if (args[0] === '..') {
+                currentDirectory = '/home';
+            } else {
+                addOutput(`bash: cd: ${args[0]}: No such file or directory`, 'error');
+                return;
+            }
+            addOutput('', 'output');
+        }
+
+        function handleNmap(args) {
+            if (args.length === 0) {
+                addOutput('Usage: nmap [target]', 'error');
+                addOutput('Example: nmap 13.62.104.182', 'info');
+                return;
+            }
+            
+            const target = args[0];
+            if (target === '13.62.104.182') {
+                const output = `Starting Nmap 7.80 ( https://nmap.org ) at 2023-12-15 10:30 UTC
+Nmap scan report for 13.62.104.182
+Host is up (0.001s latency).
+Not shown: 996 closed ports
+PORT     STATE SERVICE     VERSION
+21/tcp   open  ftp         vsftpd 2.0.8 or later
+22/tcp   open  ssh         OpenSSH 8.9p1 Ubuntu 3ubuntu0.13
+23/tcp   open  telnet
+80/tcp   open  http        nginx 1.18.0
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 2.34 seconds`;
+                addOutput(output, 'output');
+            } else {
+                addOutput(`Starting Nmap 7.80 ( https://nmap.org ) at 2023-12-15 10:30 UTC
+Nmap scan report for ${target}
+Host seems down. If it is really up, but blocking our ping probes, try -Pn
+Nmap done: 1 IP address (0 hosts up) scanned in 3.04 seconds`, 'output');
+            }
+        }
+
+        function handleFtp(args) {
+            if (args.length === 0) {
+                addOutput('Usage: ftp [target]', 'error');
+                addOutput('Example: ftp 13.62.104.182', 'info');
+                return;
+            }
+            
+            const target = args[0];
+            if (target === '13.62.104.182') {
+                addOutput(`Connected to ${target}.
+220 (vsftpd 2.0.8 or later)
+Name (${target}:root): `, 'output');
+                
+                // Simulate FTP interaction
+                setTimeout(() => {
+                    addOutput('Anonymous', 'input');
+                    addOutput('331 Please specify the password.', 'output');
+                    addOutput('Password: ', 'output');
+                    
+                    setTimeout(() => {
+                        addOutput('12345678', 'input');
+                        addOutput('230 Login successful.', 'output');
+                        addOutput('Remote system type is UNIX.', 'output');
+                        addOutput('Using binary mode to transfer files.', 'output');
+                        addOutput('ftp> ', 'output');
+                        
+                        setTimeout(() => {
+                            addOutput('ls', 'input');
+                            addOutput('200 PORT command successful. Consider using PASV.', 'output');
+                            addOutput('150 Here comes the directory listing.', 'output');
+                            addOutput(`drwxr-xr-x    2 0        0            4096 Dec 15 10:30 .
+drwxr-xr-x    2 0        0            4096 Dec 15 10:30 ..
+-rw-r--r--    1 0        0             125 Dec 15 10:30 FLAG{Anonymous_ftp_flag}
+226 Directory send OK.`, 'output');
+                            addOutput('ftp> ', 'output');
+                            
+                            setTimeout(() => {
+                                addOutput('get FLAG{Anonymous_ftp_flag}', 'input');
+                                addOutput('200 PORT command successful. Consider using PASV.', 'output');
+                                addOutput('150 Opening BINARY mode data connection for FLAG{Anonymous_ftp_flag} (125 bytes).', 'output');
+                                addOutput('226 Transfer complete.', 'output');
+                                addOutput('125 bytes received in 0.00 secs (125.00 Kbytes/sec)', 'output');
+                                addOutput('ftp> ', 'output');
+                                
+                                setTimeout(() => {
+                                    addOutput('quit', 'input');
+                                    addOutput('221 Goodbye.', 'output');
+                                }, 1000);
+                            }, 1000);
+                        }, 1000);
+                    }, 1000);
+                }, 1000);
+            } else {
+                addOutput(`ftp: connect: Connection refused`, 'error');
+            }
+        }
+
+        function handleSmbclient(args) {
+            if (args.length === 0) {
+                addOutput('Usage: smbclient [share]', 'error');
+                addOutput('Example: smbclient //13.62.104.182/credentials', 'info');
+                return;
+            }
+            
+            const share = args[0];
+            if (share === '//13.62.104.182/credentials') {
+                addOutput(`Enter WORKGROUP\\root's password: `, 'output');
+                
+                setTimeout(() => {
+                    addOutput('', 'input');
+                    addOutput('Try "help" to get a list of possible commands.', 'output');
+                    addOutput('smb: \\> ', 'output');
+                    
+                    setTimeout(() => {
+                        addOutput('ls', 'input');
+                        addOutput('  .                                   D        0  Dec 15 10:30:00', 'output');
+                        addOutput('  ..                                  D        0  Dec 15 10:30:00', 'output');
+                        addOutput('  thisisnot                           D        0  Dec 15 10:30:00', 'output');
+                        addOutput('', 'output');
+                        addOutput('        65536 blocks of size 1024. 65536 blocks available', 'output');
+                        addOutput('smb: \\> ', 'output');
+                        
+                        setTimeout(() => {
+                            addOutput('cd thisisnot', 'input');
+                            addOutput('smb: \\thisisnot\\> ', 'output');
+                            
+                            setTimeout(() => {
+                                addOutput('ls', 'input');
+                                addOutput('  .                                   D        0  Dec 15 10:30:00', 'output');
+                                addOutput('  ..                                  D        0  Dec 15 10:30:00', 'output');
+                                addOutput('  FLAG{smb_credentials_flag}          A       25  Dec 15 10:30:00', 'output');
+                                addOutput('', 'output');
+                                addOutput('        65536 blocks of size 1024. 65536 blocks available', 'output');
+                                addOutput('smb: \\thisisnot\\> ', 'output');
+                                
+                                setTimeout(() => {
+                                    addOutput('get FLAG{smb_credentials_flag}', 'input');
+                                    addOutput('getting file \\thisisnot\\FLAG{smb_credentials_flag} of size 25 as FLAG{smb_credentials_flag} (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)', 'output');
+                                    addOutput('smb: \\thisisnot\\> ', 'output');
+                                    
+                                    setTimeout(() => {
+                                        addOutput('quit', 'input');
+                                    }, 1000);
+                                }, 1000);
+                            }, 1000);
+                        }, 1000);
+                    }, 1000);
+                }, 1000);
+            } else {
+                addOutput(`tree connect failed: NT_STATUS_BAD_NETWORK_NAME`, 'error');
+            }
+        }
+
+        function handleTelnet(args) {
+            if (args.length === 0) {
+                addOutput('Usage: telnet [target]', 'error');
+                addOutput('Example: telnet 13.62.104.182', 'info');
+                return;
+            }
+            
+            const target = args[0];
+            if (target === '13.62.104.182') {
+                addOutput(`Trying ${target}...`, 'output');
+                addOutput(`Connected to ${target}.`, 'output');
+                addOutput(`Escape character is '^]'.`, 'output');
+                addOutput('', 'output');
+                addOutput('Ubuntu 20.04.3 LTS', 'output');
+                addOutput('ctf-lab login: ', 'output');
+                
+                setTimeout(() => {
+                    addOutput('root', 'input');
+                    addOutput('Password: ', 'output');
+                    
+                    setTimeout(() => {
+                        addOutput('', 'input');
+                        addOutput('Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.4.0-74-generic x86_64)', 'output');
+                        addOutput('', 'output');
+                        addOutput(' * Documentation:  https://help.ubuntu.com/', 'output');
+                        addOutput('', 'output');
+                        addOutput('root@ctf-lab:~# ', 'output');
+                        
+                        setTimeout(() => {
+                            addOutput('ls', 'input');
+                            addOutput('FLAG{telnet_root_flag}', 'output');
+                            addOutput('root@ctf-lab:~# ', 'output');
+                            
+                            setTimeout(() => {
+                                addOutput('cat FLAG{telnet_root_flag}', 'input');
+                                addOutput('FLAG{telnet_root_flag}', 'output');
+                                addOutput('root@ctf-lab:~# ', 'output');
+                                
+                                setTimeout(() => {
+                                    addOutput('exit', 'input');
+                                    addOutput('Connection closed by foreign host.', 'output');
+                                }, 1000);
+                            }, 1000);
+                        }, 1000);
+                    }, 1000);
+                }, 1000);
+            } else {
+                addOutput(`telnet: connect to address ${target}: Connection refused`, 'error');
+            }
+        }
+
+        function clearTerminal() {
+            const outputs = terminalBody.querySelectorAll('.terminal-output');
+            outputs.forEach(output => {
+                if (!output.querySelector('.help-panel')) {
+                    output.remove();
+                }
+            });
+        }
+
+        function showHelp() {
+            const helpText = `Available Commands:
+  ls                    - List files and directories
+  cd [directory]        - Change directory
+  nmap [target]         - Network scanner
+  ftp [target]          - FTP client
+  smbclient [share]     - SMB client
+  telnet [target]       - Telnet client
+  clear                 - Clear terminal
+  help                  - Show this help
+  pwd                   - Show current directory
+
+Target Information:
+  IP: 13.62.104.182
+  Services: FTP, SSH, Telnet, HTTP
+  FTP Credentials: Anonymous/12345678
+  SMB Share: //13.62.104.182/credentials
+  Telnet Credentials: root/(empty password)`;
+            addOutput(helpText, 'output');
+        }
+
+        function addOutput(content, type) {
+            const outputDiv = document.createElement('div');
+            outputDiv.className = 'terminal-output';
+            
+            let className = 'output-text';
+            if (type === 'error') className += ' error-text';
+            else if (type === 'success') className += ' success-text';
+            else if (type === 'info') className += ' info-text';
+            else if (type === 'warning') className += ' warning-text';
+            else if (type === 'command') className += ' command-text';
+            else if (type === 'input') className += ' input-text';
+            
+            outputDiv.innerHTML = `<div class="${className}">${content}</div>`;
+            terminalBody.appendChild(outputDiv);
+            terminalBody.scrollTop = terminalBody.scrollHeight;
+        }
+
+        function addCommandLine() {
+            const commandLine = document.createElement('div');
+            commandLine.className = 'command-line';
+            commandLine.innerHTML = `
+                <span class="prompt">root@ctf-lab:~#</span>
+                <input type="text" class="command-input" placeholder="Enter command..." autocomplete="off">
+            `;
+            terminalBody.appendChild(commandLine);
+            
+            const newInput = commandLine.querySelector('.command-input');
+            newInput.focus();
+            
+            // Remove old command line
+            const oldCommandLine = document.querySelector('.command-line');
+            if (oldCommandLine && oldCommandLine !== commandLine) {
+                oldCommandLine.remove();
+            }
+            
+            // Add event listener to new input
+            newInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const command = newInput.value.trim();
+                    if (command) {
+                        executeCommand(command);
+                        newInput.value = '';
+                        commandHistory.push(command);
+                        historyIndex = commandHistory.length;
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (historyIndex > 0) {
+                        historyIndex--;
+                        newInput.value = commandHistory[historyIndex];
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (historyIndex < commandHistory.length - 1) {
+                        historyIndex++;
+                        newInput.value = commandHistory[historyIndex];
+                    } else {
+                        historyIndex = commandHistory.length;
+                        newInput.value = '';
+                    }
+                }
+            });
+        }
+
+        // Timer functionality
+        function updateTimer() {
+            fetch('/api/time_remaining')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.expired) {
+                        document.getElementById('countdown').innerHTML = 'Time Expired!';
+                        window.location.href = '/time_expired';
+                        return;
+                    }
+                    
+                    const minutes = Math.floor(data.remaining_seconds / 60);
+                    const seconds = data.remaining_seconds % 60;
+                    document.getElementById('countdown').innerHTML = 
+                        `Time Remaining: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                })
+                .catch(error => {
+                    console.error('Error updating timer:', error);
+                });
+        }
+
+        setInterval(updateTimer, 1000);
+        updateTimer();
+    </script>
+</body>
+</html>
