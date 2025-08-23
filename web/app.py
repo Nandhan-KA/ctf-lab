@@ -16,6 +16,17 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+def generate_flags(roll_number):
+    """Generate unique flags for a student based on their roll number"""
+    import hashlib
+    hash_base = hashlib.md5(roll_number.encode()).hexdigest()[:8]
+    
+    return {
+        'ftp_flag': f'FLAG{{ftp_{hash_base}_flag}}',
+        'smb_flag': f'FLAG{{smb_{hash_base}_flag}}',
+        'telnet_flag': f'FLAG{{telnet_{hash_base}_flag}}'
+    }
+
 def ensure_schema():
     with get_db_connection() as conn:
         cursor = conn.cursor()
@@ -160,7 +171,11 @@ def change_password():
 @login_required
 @check_time_limit
 def terminal():
-    return render_template('terminal.html')
+    # Generate dynamic flags based on student's roll number
+    roll_number = session.get('roll_number', '')
+    flags = generate_flags(roll_number)
+    
+    return render_template('terminal.html', flags=flags)
 
 @app.route('/submit_answers', methods=['GET', 'POST'])
 @login_required
@@ -175,12 +190,15 @@ def submit_answers():
         q5_answer = request.form.get('q5', '').strip()
         q6_answer = request.form.get('q6', '').strip()
         
-        # Define correct answers
+        # Generate dynamic correct answers based on student's roll number
+        roll_number = session.get('roll_number', '')
+        flags = generate_flags(roll_number)
+        
         correct_answers = {
             'q1': '21/tcp open ftp vsftpd 2.0.8 or later, 22/tcp open ssh OpenSSH 8.9p1 Ubuntu 3ubuntu0.13, 23/tcp open telnet, 80/tcp open http nginx 1.18.0',
-            'q2': 'FLAG{Anonymous_ftp_flag}',
-            'q3': 'FLAG{smb_credentials_flag}',
-            'q4': 'FLAG{telnet_root_flag}',
+            'q2': flags['ftp_flag'],
+            'q3': flags['smb_flag'],
+            'q4': flags['telnet_flag'],
             'q5': 'vsftpd 2.0.8 or later, Samba 4.15.9, telnetd',
             'q6': 'Linux'
         }
@@ -265,4 +283,4 @@ def time_remaining():
 
 if __name__ == '__main__':
     ensure_schema()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)

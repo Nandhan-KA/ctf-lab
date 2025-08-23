@@ -140,6 +140,67 @@
             color: #cccccc;
             margin-bottom: 5px;
         }
+        
+        .flag-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .flag-content {
+            background: #2d2d2d;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+        
+        .flag-content h3 {
+            color: #00ff00;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .flag-text {
+            background: #000000;
+            border: 1px solid #00ff00;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: #00ff00;
+            word-break: break-all;
+        }
+        
+        .flag-content button {
+            background: #00ff00;
+            color: #000000;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .flag-content button:hover {
+            background: #00cc00;
+        }
+        
+        .prompt-text {
+            color: #00ff00;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -161,32 +222,35 @@
         </div>
         
         <div class="terminal-body" id="terminalBody">
-            <div class="help-panel">
-                <div class="help-title">📋 Available Commands:</div>
-                <div class="help-command">ls</div>
-                <div class="help-description">List files and directories</div>
-                
-                <div class="help-command">cd [directory]</div>
-                <div class="help-description">Change directory</div>
-                
-                <div class="help-command">nmap [target]</div>
-                <div class="help-description">Network scanner (target: 13.62.104.182)</div>
-                
-                <div class="help-command">ftp [target]</div>
-                <div class="help-description">FTP client (target: 13.62.104.182)</div>
-                
-                <div class="help-command">smbclient [share]</div>
-                <div class="help-description">SMB client (share: //13.62.104.182/credentials)</div>
-                
-                <div class="help-command">telnet [target]</div>
-                <div class="help-description">Telnet client (target: 13.62.104.182)</div>
-                
-                <div class="help-command">clear</div>
-                <div class="help-description">Clear terminal</div>
-                
-                <div class="help-command">help</div>
-                <div class="help-description">Show this help</div>
-            </div>
+                         <div class="help-panel">
+                 <div class="help-title">📋 Available Commands:</div>
+                 <div class="help-command">ls</div>
+                 <div class="help-description">List files and directories</div>
+                 
+                 <div class="help-command">cd [directory]</div>
+                 <div class="help-description">Change directory</div>
+                 
+                 <div class="help-command">nmap [target]</div>
+                 <div class="help-description">Network scanner (target: 13.62.104.182)</div>
+                 
+                 <div class="help-command">ftp [target]</div>
+                 <div class="help-description">FTP client (target: 13.62.104.182)</div>
+                 
+                 <div class="help-command">smbclient [share]</div>
+                 <div class="help-description">SMB client (share: //13.62.104.182/credentials)</div>
+                 
+                 <div class="help-command">telnet [target]</div>
+                 <div class="help-description">Telnet client (target: 13.62.104.182)</div>
+                 
+                 <div class="help-command">clear</div>
+                 <div class="help-description">Clear terminal</div>
+                 
+                 <div class="help-command">help</div>
+                 <div class="help-description">Show this help</div>
+                 
+                 <div class="help-command">💡 Note</div>
+                 <div class="help-description">Flags are unique to each student based on roll number</div>
+             </div>
             
             <div class="terminal-output">
                 <div class="output-text success-text">Welcome to CTF Lab Terminal Simulator!</div>
@@ -241,6 +305,12 @@
         });
 
         function executeCommand(command) {
+            // Check if we're in an interactive session
+            if (handleInteractiveCommand(command)) {
+                addCommandLine();
+                return;
+            }
+            
             // Add command to output
             addOutput(`<span class="prompt">root@ctf-lab:~#</span> ${command}`, 'command');
             
@@ -350,45 +420,13 @@ Nmap done: 1 IP address (0 hosts up) scanned in 3.04 seconds`, 'output');
 220 (vsftpd 2.0.8 or later)
 Name (${target}:root): `, 'output');
                 
-                // Simulate FTP interaction
-                setTimeout(() => {
-                    addOutput('Anonymous', 'input');
-                    addOutput('331 Please specify the password.', 'output');
-                    addOutput('Password: ', 'output');
-                    
-                    setTimeout(() => {
-                        addOutput('12345678', 'input');
-                        addOutput('230 Login successful.', 'output');
-                        addOutput('Remote system type is UNIX.', 'output');
-                        addOutput('Using binary mode to transfer files.', 'output');
-                        addOutput('ftp> ', 'output');
-                        
-                        setTimeout(() => {
-                            addOutput('ls', 'input');
-                            addOutput('200 PORT command successful. Consider using PASV.', 'output');
-                            addOutput('150 Here comes the directory listing.', 'output');
-                            addOutput(`drwxr-xr-x    2 0        0            4096 Dec 15 10:30 .
-drwxr-xr-x    2 0        0            4096 Dec 15 10:30 ..
--rw-r--r--    1 0        0             125 Dec 15 10:30 FLAG{Anonymous_ftp_flag}
-226 Directory send OK.`, 'output');
-                            addOutput('ftp> ', 'output');
-                            
-                            setTimeout(() => {
-                                addOutput('get FLAG{Anonymous_ftp_flag}', 'input');
-                                addOutput('200 PORT command successful. Consider using PASV.', 'output');
-                                addOutput('150 Opening BINARY mode data connection for FLAG{Anonymous_ftp_flag} (125 bytes).', 'output');
-                                addOutput('226 Transfer complete.', 'output');
-                                addOutput('125 bytes received in 0.00 secs (125.00 Kbytes/sec)', 'output');
-                                addOutput('ftp> ', 'output');
-                                
-                                setTimeout(() => {
-                                    addOutput('quit', 'input');
-                                    addOutput('221 Goodbye.', 'output');
-                                }, 1000);
-                            }, 1000);
-                        }, 1000);
-                    }, 1000);
-                }, 1000);
+                                 // Start interactive FTP session
+                 startInteractiveSession('ftp', {
+                     target: target,
+                     username: 'admin',
+                     password: '12345678',
+                     flag: '{{ flags.ftp_flag }}'
+                 });
             } else {
                 addOutput(`ftp: connect: Connection refused`, 'error');
             }
@@ -405,46 +443,11 @@ drwxr-xr-x    2 0        0            4096 Dec 15 10:30 ..
             if (share === '//13.62.104.182/credentials') {
                 addOutput(`Enter WORKGROUP\\root's password: `, 'output');
                 
-                setTimeout(() => {
-                    addOutput('', 'input');
-                    addOutput('Try "help" to get a list of possible commands.', 'output');
-                    addOutput('smb: \\> ', 'output');
-                    
-                    setTimeout(() => {
-                        addOutput('ls', 'input');
-                        addOutput('  .                                   D        0  Dec 15 10:30:00', 'output');
-                        addOutput('  ..                                  D        0  Dec 15 10:30:00', 'output');
-                        addOutput('  thisisnot                           D        0  Dec 15 10:30:00', 'output');
-                        addOutput('', 'output');
-                        addOutput('        65536 blocks of size 1024. 65536 blocks available', 'output');
-                        addOutput('smb: \\> ', 'output');
-                        
-                        setTimeout(() => {
-                            addOutput('cd thisisnot', 'input');
-                            addOutput('smb: \\thisisnot\\> ', 'output');
-                            
-                            setTimeout(() => {
-                                addOutput('ls', 'input');
-                                addOutput('  .                                   D        0  Dec 15 10:30:00', 'output');
-                                addOutput('  ..                                  D        0  Dec 15 10:30:00', 'output');
-                                addOutput('  FLAG{smb_credentials_flag}          A       25  Dec 15 10:30:00', 'output');
-                                addOutput('', 'output');
-                                addOutput('        65536 blocks of size 1024. 65536 blocks available', 'output');
-                                addOutput('smb: \\thisisnot\\> ', 'output');
-                                
-                                setTimeout(() => {
-                                    addOutput('get FLAG{smb_credentials_flag}', 'input');
-                                    addOutput('getting file \\thisisnot\\FLAG{smb_credentials_flag} of size 25 as FLAG{smb_credentials_flag} (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)', 'output');
-                                    addOutput('smb: \\thisisnot\\> ', 'output');
-                                    
-                                    setTimeout(() => {
-                                        addOutput('quit', 'input');
-                                    }, 1000);
-                                }, 1000);
-                            }, 1000);
-                        }, 1000);
-                    }, 1000);
-                }, 1000);
+                                 // Start interactive SMB session
+                 startInteractiveSession('smb', {
+                     share: share,
+                     flag: '{{ flags.smb_flag }}'
+                 });
             } else {
                 addOutput(`tree connect failed: NT_STATUS_BAD_NETWORK_NAME`, 'error');
             }
@@ -466,36 +469,11 @@ drwxr-xr-x    2 0        0            4096 Dec 15 10:30 ..
                 addOutput('Ubuntu 20.04.3 LTS', 'output');
                 addOutput('ctf-lab login: ', 'output');
                 
-                setTimeout(() => {
-                    addOutput('root', 'input');
-                    addOutput('Password: ', 'output');
-                    
-                    setTimeout(() => {
-                        addOutput('', 'input');
-                        addOutput('Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.4.0-74-generic x86_64)', 'output');
-                        addOutput('', 'output');
-                        addOutput(' * Documentation:  https://help.ubuntu.com/', 'output');
-                        addOutput('', 'output');
-                        addOutput('root@ctf-lab:~# ', 'output');
-                        
-                        setTimeout(() => {
-                            addOutput('ls', 'input');
-                            addOutput('FLAG{telnet_root_flag}', 'output');
-                            addOutput('root@ctf-lab:~# ', 'output');
-                            
-                            setTimeout(() => {
-                                addOutput('cat FLAG{telnet_root_flag}', 'input');
-                                addOutput('FLAG{telnet_root_flag}', 'output');
-                                addOutput('root@ctf-lab:~# ', 'output');
-                                
-                                setTimeout(() => {
-                                    addOutput('exit', 'input');
-                                    addOutput('Connection closed by foreign host.', 'output');
-                                }, 1000);
-                            }, 1000);
-                        }, 1000);
-                    }, 1000);
-                }, 1000);
+                                 // Start interactive Telnet session
+                 startInteractiveSession('telnet', {
+                     target: target,
+                     flag: '{{ flags.telnet_flag }}'
+                 });
             } else {
                 addOutput(`telnet: connect to address ${target}: Connection refused`, 'error');
             }
@@ -525,9 +503,11 @@ drwxr-xr-x    2 0        0            4096 Dec 15 10:30 ..
 Target Information:
   IP: 13.62.104.182
   Services: FTP, SSH, Telnet, HTTP
-  FTP Credentials: Anonymous/12345678
+  FTP Credentials: admin/12345678
   SMB Share: //13.62.104.182/credentials
-  Telnet Credentials: root/(empty password)`;
+  Telnet Credentials: root/(empty password)
+
+Note: Flags are unique to each student and based on your roll number.`;
             addOutput(helpText, 'output');
         }
 
@@ -542,6 +522,7 @@ Target Information:
             else if (type === 'warning') className += ' warning-text';
             else if (type === 'command') className += ' command-text';
             else if (type === 'input') className += ' input-text';
+            else if (type === 'prompt') className += ' prompt-text';
             
             outputDiv.innerHTML = `<div class="${className}">${content}</div>`;
             terminalBody.appendChild(outputDiv);
@@ -593,6 +574,256 @@ Target Information:
                     }
                 }
             });
+        }
+
+        // Interactive session variables
+        let currentSession = null;
+        let sessionType = null;
+        let sessionData = null;
+        let waitingForInput = false;
+        let inputPrompt = '';
+
+        // Flag popup functionality
+        function showFlagPopup(flag) {
+            const popup = document.createElement('div');
+            popup.className = 'flag-popup';
+            popup.innerHTML = `
+                <div class="flag-content">
+                    <h3>🏴 Flag Found!</h3>
+                    <div class="flag-text">${flag}</div>
+                    <button onclick="this.parentElement.parentElement.remove()">Close</button>
+                </div>
+            `;
+            document.body.appendChild(popup);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (popup.parentElement) {
+                    popup.remove();
+                }
+            }, 5000);
+        }
+
+        // Interactive session handler
+        function startInteractiveSession(type, data) {
+            sessionType = type;
+            sessionData = data;
+            currentSession = {
+                step: 0,
+                authenticated: false,
+                currentDir: '/'
+            };
+            
+            if (type === 'ftp') {
+                handleFtpInteractive();
+            } else if (type === 'smb') {
+                handleSmbInteractive();
+            } else if (type === 'telnet') {
+                handleTelnetInteractive();
+            }
+        }
+
+        function handleFtpInteractive() {
+            const steps = [
+                { prompt: 'Name (13.62.104.182:root): ', expected: 'admin', response: '331 Please specify the password.' },
+                { prompt: 'Password: ', expected: '12345678', response: '230 Login successful.\nRemote system type is UNIX.\nUsing binary mode to transfer files.\nftp> ' }
+            ];
+            
+            if (currentSession.step < steps.length) {
+                const step = steps[currentSession.step];
+                inputPrompt = step.prompt;
+                waitingForInput = true;
+                addOutput(step.prompt, 'prompt');
+            }
+        }
+
+        function handleSmbInteractive() {
+            const steps = [
+                { prompt: 'Enter WORKGROUP\\root\'s password: ', expected: '', response: 'Try "help" to get a list of possible commands.\nsmb: \\> ' }
+            ];
+            
+            if (currentSession.step < steps.length) {
+                const step = steps[currentSession.step];
+                inputPrompt = step.prompt;
+                waitingForInput = true;
+                addOutput(step.prompt, 'prompt');
+            }
+        }
+
+        function handleTelnetInteractive() {
+            const steps = [
+                { prompt: 'ctf-lab login: ', expected: 'root', response: 'Password: ' },
+                { prompt: 'Password: ', expected: '', response: 'Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.4.0-74-generic x86_64)\n\n * Documentation:  https://help.ubuntu.com/\n\nroot@ctf-lab:~# ' }
+            ];
+            
+            if (currentSession.step < steps.length) {
+                const step = steps[currentSession.step];
+                inputPrompt = step.prompt;
+                waitingForInput = true;
+                addOutput(step.prompt, 'prompt');
+            }
+        }
+
+        function handleInteractiveCommand(command) {
+            if (!waitingForInput || !currentSession) return false;
+            
+            const input = command.trim();
+            waitingForInput = false;
+            
+            if (sessionType === 'ftp') {
+                handleFtpCommand(input);
+            } else if (sessionType === 'smb') {
+                handleSmbCommand(input);
+            } else if (sessionType === 'telnet') {
+                handleTelnetCommand(input);
+            }
+            
+            return true;
+        }
+
+        function handleFtpCommand(input) {
+            const steps = [
+                { expected: 'admin', response: '331 Please specify the password.' },
+                { expected: '12345678', response: '230 Login successful.\nRemote system type is UNIX.\nUsing binary mode to transfer files.\nftp> ' }
+            ];
+            
+            if (currentSession.step < steps.length) {
+                const step = steps[currentSession.step];
+                if (input === step.expected) {
+                    addOutput(input, 'input');
+                    addOutput(step.response, 'output');
+                    currentSession.step++;
+                    currentSession.authenticated = true;
+                    addOutput('ftp> ', 'prompt');
+                } else {
+                    addOutput(input, 'input');
+                    addOutput('530 Login incorrect.', 'error');
+                    addOutput('ftp> ', 'prompt');
+                }
+            } else {
+                // Handle FTP commands after login
+                addOutput(input, 'input');
+                if (input === 'ls') {
+                    addOutput('200 PORT command successful. Consider using PASV.', 'output');
+                    addOutput('150 Here comes the directory listing.', 'output');
+                    addOutput(`drwxr-xr-x    2 0        0            4096 Dec 15 10:30 .
+drwxr-xr-x    2 0        0            4096 Dec 15 10:30 ..
+-rw-r--r--    1 0        0             125 Dec 15 10:30 ${sessionData.flag}
+226 Directory send OK.`, 'output');
+                    addOutput('ftp> ', 'prompt');
+                } else if (input.startsWith('get ')) {
+                    const filename = input.substring(4);
+                    if (filename === sessionData.flag) {
+                        addOutput('200 PORT command successful. Consider using PASV.', 'output');
+                        addOutput(`150 Opening BINARY mode data connection for ${filename} (125 bytes).`, 'output');
+                        addOutput('226 Transfer complete.', 'output');
+                        addOutput('125 bytes received in 0.00 secs (125.00 Kbytes/sec)', 'output');
+                        showFlagPopup(sessionData.flag);
+                        addOutput('ftp> ', 'prompt');
+                    } else {
+                        addOutput('550 Failed to open file.', 'error');
+                        addOutput('ftp> ', 'prompt');
+                    }
+                } else if (input === 'quit') {
+                    addOutput('221 Goodbye.', 'output');
+                    currentSession = null;
+                    sessionType = null;
+                } else {
+                    addOutput('500 Unknown command.', 'error');
+                    addOutput('ftp> ', 'prompt');
+                }
+            }
+        }
+
+        function handleSmbCommand(input) {
+            const steps = [
+                { expected: '', response: 'Try "help" to get a list of possible commands.\nsmb: \\> ' }
+            ];
+            
+            if (currentSession.step < steps.length) {
+                const step = steps[currentSession.step];
+                addOutput(input, 'input');
+                addOutput(step.response, 'output');
+                currentSession.step++;
+                currentSession.authenticated = true;
+                addOutput('smb: \\> ', 'prompt');
+            } else {
+                // Handle SMB commands after login
+                addOutput(input, 'input');
+                if (input === 'ls') {
+                    addOutput('  .                                   D        0  Dec 15 10:30:00', 'output');
+                    addOutput('  ..                                  D        0  Dec 15 10:30:00', 'output');
+                    addOutput('  thisisnot                           D        0  Dec 15 10:30:00', 'output');
+                    addOutput('', 'output');
+                    addOutput('        65536 blocks of size 1024. 65536 blocks available', 'output');
+                    addOutput('smb: \\> ', 'prompt');
+                } else if (input === 'cd thisisnot') {
+                    currentSession.currentDir = '/thisisnot';
+                    addOutput('smb: \\thisisnot\\> ', 'prompt');
+                } else if (input.startsWith('get ')) {
+                    const filename = input.substring(4);
+                    if (filename === sessionData.flag) {
+                        addOutput(`getting file \\thisisnot\\${filename} of size 25 as ${filename} (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)`, 'output');
+                        showFlagPopup(sessionData.flag);
+                        addOutput('smb: \\thisisnot\\> ', 'prompt');
+                    } else {
+                        addOutput('NT_STATUS_OBJECT_NAME_NOT_FOUND', 'error');
+                        addOutput('smb: \\thisisnot\\> ', 'prompt');
+                    }
+                } else if (input === 'quit') {
+                    currentSession = null;
+                    sessionType = null;
+                } else {
+                    addOutput('NT_STATUS_INVALID_PARAMETER', 'error');
+                    addOutput('smb: \\> ', 'prompt');
+                }
+            }
+        }
+
+        function handleTelnetCommand(input) {
+            const steps = [
+                { expected: 'root', response: 'Password: ' },
+                { expected: '', response: 'Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.4.0-74-generic x86_64)\n\n * Documentation:  https://help.ubuntu.com/\n\nroot@ctf-lab:~# ' }
+            ];
+            
+            if (currentSession.step < steps.length) {
+                const step = steps[currentSession.step];
+                if (input === step.expected) {
+                    addOutput(input, 'input');
+                    addOutput(step.response, 'output');
+                    currentSession.step++;
+                    currentSession.authenticated = true;
+                    addOutput('root@ctf-lab:~# ', 'prompt');
+                } else {
+                    addOutput(input, 'input');
+                    addOutput('Login incorrect', 'error');
+                    addOutput('ctf-lab login: ', 'prompt');
+                }
+            } else {
+                // Handle Telnet commands after login
+                addOutput(input, 'input');
+                if (input === 'ls') {
+                    addOutput(sessionData.flag, 'output');
+                    addOutput('root@ctf-lab:~# ', 'prompt');
+                } else if (input.startsWith('cat ')) {
+                    const filename = input.substring(4);
+                    if (filename === sessionData.flag) {
+                        addOutput(sessionData.flag, 'output');
+                        showFlagPopup(sessionData.flag);
+                        addOutput('root@ctf-lab:~# ', 'prompt');
+                    } else {
+                        addOutput('cat: No such file or directory', 'error');
+                        addOutput('root@ctf-lab:~# ', 'prompt');
+                    }
+                } else if (input === 'exit') {
+                    addOutput('Connection closed by foreign host.', 'output');
+                    currentSession = null;
+                    sessionType = null;
+                } else {
+                    addOutput(`bash: ${input}: command not found`, 'error');
+                    addOutput('root@ctf-lab:~# ', 'prompt');
+                }
+            }
         }
 
         // Timer functionality
