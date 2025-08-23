@@ -1,123 +1,193 @@
-# ctf-lab/web/templates/submit.html
-{% extends 'base.html' %}
-{% block content %}
-<div class="row justify-content-center mt-4">
-    <div class="col-md-10">
-        <div class="card shadow">
-            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">CTF Exam - Submit Your Answers</h4>
-                <div class="text-white">
-                    <strong>Time Remaining: <span id="countdown">30:00</span></strong>
-                </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF Lab - Exam</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .exam-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            margin: 2rem auto;
+            max-width: 800px;
+        }
+        .timer {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .exam-content {
+            padding: 2rem;
+        }
+        .question {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        .question h5 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .form-control {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            padding: 12px;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 15px 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        .instructions {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="exam-container">
+            <div class="timer">
+                <span id="countdown">Time Remaining: 30:00</span>
             </div>
-            <div class="card-body">
-                <div class="alert alert-warning">
-                    <strong>Instructions:</strong> You have 30 minutes to complete this exam. Answer all questions based on your investigation of the target server 13.62.104.182.
-                </div>
+            
+            <div class="exam-content">
+                <h2 class="text-center mb-4">🔍 CTF Lab Exam</h2>
                 
-                <form method="post" action="{{ url_for('submit_answers') }}" id="examForm">
-                    <div class="mb-4">
-                        <h5 class="text-primary">Question 1:</h5>
-                        <p class="mb-2">What are all the services running on the IP 13.62.104.182?</p>
-                        <input type="text" class="form-control" name="question_1" 
-                               placeholder="e.g., ftp, ssh, http, telnet" required>
+                <div class="instructions">
+                    <h5>📋 Instructions:</h5>
+                    <ul class="mb-0">
+                        <li>You have <strong>30 minutes</strong> to complete all 6 questions</li>
+                        <li>Use network tools like <code>nmap</code>, <code>ftp</code>, <code>smbclient</code>, and <code>telnet</code></li>
+                        <li>Target IP: <strong>13.62.104.182</strong></li>
+                        <li>Submit your answers before time runs out</li>
+                    </ul>
+                </div>
+
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('submit_answers') }}" id="examForm">
+                    <div class="question">
+                        <h5>Question 1: Network Services Enumeration</h5>
+                        <p>What services are running on the target IP 13.62.104.182? Use nmap to scan the target and list all open services with their versions.</p>
+                        <input type="text" class="form-control" name="q1" placeholder="Enter the nmap scan results showing all open services..." required>
                     </div>
 
-                    <div class="mb-4">
-                        <h5 class="text-primary">Question 2:</h5>
-                        <p class="mb-2">Flag for FTP (connect using user: Anonymous, pass: 12345678)</p>
-                        <input type="text" class="form-control" name="question_2" 
-                               placeholder="FLAG{...}" required>
+                    <div class="question">
+                        <h5>Question 2: FTP Flag</h5>
+                        <p>Connect to the FTP server anonymously and retrieve the flag. Use: <code>ftp 13.62.104.182</code> with username "Anonymous" and password "12345678"</p>
+                        <input type="text" class="form-control" name="q2" placeholder="Enter the FTP flag..." required>
                     </div>
 
-                    <div class="mb-4">
-                        <h5 class="text-primary">Question 3:</h5>
-                        <p class="mb-2">Flag for SMB (use smbclient //13.62.104.182/credentials, check all three folders: idk, thisisit, thisisnot - the flag in thisisnot folder is the answer)</p>
-                        <input type="text" class="form-control" name="question_3" 
-                               placeholder="FLAG{...}" required>
+                    <div class="question">
+                        <h5>Question 3: SMB Flag</h5>
+                        <p>Connect to the SMB share "credentials" and find the flag in the "thisisnot" folder. Use: <code>smbclient //13.62.104.182/credentials</code></p>
+                        <input type="text" class="form-control" name="q3" placeholder="Enter the SMB flag from thisisnot folder..." required>
                     </div>
 
-                    <div class="mb-4">
-                        <h5 class="text-primary">Question 4:</h5>
-                        <p class="mb-2">Telnet flag (connect using root without password, there are 2 flags - find the correct one)</p>
-                        <input type="text" class="form-control" name="question_4" 
-                               placeholder="FLAG{...}" required>
+                    <div class="question">
+                        <h5>Question 4: Telnet Flag</h5>
+                        <p>Connect to the Telnet service as root without password and find the correct flag. Use: <code>telnet 13.62.104.182</code> and login as root</p>
+                        <input type="text" class="form-control" name="q4" placeholder="Enter the correct Telnet flag..." required>
                     </div>
 
-                    <div class="mb-4">
-                        <h5 class="text-primary">Question 5:</h5>
-                        <p class="mb-2">What is the version of FTP, SMB, and Telnet running on the server 13.62.104.182?</p>
-                        <input type="text" class="form-control" name="question_5" 
-                               placeholder="e.g., vsftpd 2.0.8 or later, SMB version info, telnet closed" required>
+                    <div class="question">
+                        <h5>Question 5: Service Versions</h5>
+                        <p>What are the versions of FTP, SMB, and Telnet services running on the server?</p>
+                        <input type="text" class="form-control" name="q5" placeholder="Enter the service versions..." required>
                     </div>
 
-                    <div class="mb-4">
-                        <h5 class="text-primary">Question 6:</h5>
-                        <p class="mb-2">What type of operating system is running on the server?</p>
-                        <input type="text" class="form-control" name="question_6" 
-                               placeholder="e.g., Linux" required>
+                    <div class="question">
+                        <h5>Question 6: Operating System</h5>
+                        <p>What operating system is running on the target server?</p>
+                        <input type="text" class="form-control" name="q6" placeholder="Enter the operating system..." required>
                     </div>
 
-                    <div class="d-grid">
-                        <button class="btn btn-primary btn-lg" type="submit" id="submitBtn">
-                            Submit All Answers
-                        </button>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-submit">Submit Exam</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-let timeRemaining = 30 * 60; // 30 minutes in seconds
-let timerInterval;
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Countdown timer
+        function updateTimer() {
+            fetch('/api/time_remaining')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.expired) {
+                        document.getElementById('countdown').innerHTML = 'Time Expired!';
+                        document.getElementById('examForm').submit();
+                        return;
+                    }
+                    
+                    const minutes = Math.floor(data.remaining_seconds / 60);
+                    const seconds = data.remaining_seconds % 60;
+                    document.getElementById('countdown').innerHTML = 
+                        `Time Remaining: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                })
+                .catch(error => {
+                    console.error('Error updating timer:', error);
+                });
+        }
 
-function updateCountdown() {
-    const minutes = Math.floor(timeRemaining / 60);
-    const seconds = timeRemaining % 60;
-    document.getElementById('countdown').textContent = 
-        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    
-    if (timeRemaining <= 0) {
-        clearInterval(timerInterval);
-        document.getElementById('countdown').textContent = '00:00';
-        document.getElementById('submitBtn').disabled = true;
-        alert('Time is up! You cannot submit answers anymore.');
-        window.location.href = '/time_expired';
-    }
-    
-    timeRemaining--;
-}
+        // Update timer every second
+        setInterval(updateTimer, 1000);
+        updateTimer(); // Initial update
 
-function startTimer() {
-    updateCountdown();
-    timerInterval = setInterval(updateCountdown, 1000);
-}
+        // Warn before page unload
+        window.addEventListener('beforeunload', function(e) {
+            e.preventDefault();
+            e.returnValue = 'Are you sure you want to leave? Your exam progress will be lost.';
+        });
 
-// Start timer when page loads
-document.addEventListener('DOMContentLoaded', startTimer);
-
-// Check time remaining from server
-function checkServerTime() {
-    fetch('/api/time_remaining')
-        .then(response => response.json())
-        .then(data => {
-            if (data.expired) {
-                clearInterval(timerInterval);
-                document.getElementById('countdown').textContent = '00:00';
-                document.getElementById('submitBtn').disabled = true;
-                alert('Time limit exceeded! You cannot submit answers anymore.');
-                window.location.href = '/time_expired';
-            } else {
-                timeRemaining = data.remaining;
-                updateCountdown();
-            }
-        })
-        .catch(error => console.error('Error checking time:', error));
-}
-
-// Check server time every 30 seconds
-setInterval(checkServerTime, 30000);
-</script>
-{% endblock %}
+        // Remove warning when submitting form
+        document.getElementById('examForm').addEventListener('submit', function() {
+            window.removeEventListener('beforeunload', arguments.callee);
+        });
+    </script>
+</body>
+</html>
